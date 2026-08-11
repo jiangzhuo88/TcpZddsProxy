@@ -1,0 +1,42 @@
+# 编译输出
+bin/
+build/
+build-*/
+*.o
+*.obj
+*.a
+*.so
+*.so.*
+*.dll
+*.dylib
+*.exe
+*.app
+
+# Qt 生成文件
+moc_*.cpp
+moc_*.h
+qrc_*.cpp
+ui_*.h
+*.moc
+*.qrc.depends
+Makefile
+Makefile.*
+*.pro.user
+*.pro.user.*
+*.qbs.user
+*.qbs.user.*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 配置文件（保留默认模板，但忽略本地实际配置，避免误提交敏感信息）
+# 如需提交默认配置，请取消注释并提供默认值模板
+# config.json
