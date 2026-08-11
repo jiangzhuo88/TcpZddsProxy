@@ -47,9 +47,9 @@ private:
     bool m_zddsStarted = false;  // 避免重复 startZDDS
 
     // 静态回调转发
-    static void ZDDS_CALLBACK staticOnRecvData(const char* domainName, const char* topicName,
-                                               const char* data, size_t len, void* context);
-    static void ZDDS_CALLBACK staticOnStartSuccess(void* userContext);
+    static void staticOnRecvData(const char* domainName, const char* topicName,
+                                 const char* data, size_t len, void* context);
+    static void staticOnStartSuccess(void* userContext);
 };
 
 #endif // ZDDSMANAGER_H

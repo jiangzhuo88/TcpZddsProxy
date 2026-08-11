@@ -92,8 +92,8 @@ void ZDDSManager::publish(const char* domainName, const char* topicName, const Q
     publish(domainName, topicName, data.constData(), (size_t)data.size());
 }
 
-void ZDDSManager::ZDDS_CALLBACK staticOnRecvData(const char* domainName, const char* topicName,
-                                                  const char* data, size_t len, void* context)
+void ZDDSManager::staticOnRecvData(const char* domainName, const char* topicName,
+                                    const char* data, size_t len, void* context)
 {
     ZDDSManager* self = static_cast<ZDDSManager*>(context);
     if (!self || !data) return;
@@ -112,7 +112,7 @@ void ZDDSManager::ZDDS_CALLBACK staticOnRecvData(const char* domainName, const c
     }
 }
 
-void ZDDSManager::ZDDS_CALLBACK staticOnStartSuccess(void* userContext)
+void ZDDSManager::staticOnStartSuccess(void* userContext)
 {
     ZDDSManager* self = static_cast<ZDDSManager*>(userContext);
     if (self) {
