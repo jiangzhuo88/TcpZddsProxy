@@ -2,6 +2,7 @@
 #define ZDDSMANAGER_H
 
 #include <QObject>
+#include <QMutex>
 #include <functional>
 #include <map>
 #include <list>
@@ -42,6 +43,8 @@ private:
 
     ZDDSInterface* m_zddsInterface = nullptr;
     std::map<std::string, std::map<std::string, std::list<RecvCallback>>> m_callbackMap;
+    QMutex m_callbackMutex;   // 保护 m_callbackMap 的跨线程读写
+    bool m_zddsStarted = false;  // 避免重复 startZDDS
 
     // 静态回调转发
     static void ZDDS_CALLBACK staticOnRecvData(const char* domainName, const char* topicName,

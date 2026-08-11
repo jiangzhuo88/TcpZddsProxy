@@ -49,6 +49,7 @@ public:
     bool start();
     void stop();
     bool isRunning() const;
+    bool isConnected() const;  // TCP实际连接是否建立（代理客户端模式有意义）
     ProxyMode currentMode() const { return m_cfg.mode; }
 
     // 统计
@@ -74,6 +75,9 @@ private slots:
     void onServerSocketReadyRead();
     void onServerSocketError(QAbstractSocket::SocketError err);
 
+    // 在主线程中实际执行 ZDDS->TCP 转发（由ZDDS回调线程通过invokeMethod触发）
+    void doForwardZddsToTcp(const QByteArray &bytes);
+
 private:
     ProxyConfig m_cfg;
     bool m_running = false;
@@ -84,6 +88,7 @@ private:
 
     // === ProxyClient模式 ===
     QTcpSocket *m_serverSocket = nullptr;   // 连接真实服务端的socket
+    bool m_serverSocketConnected = false;   // 真实服务端是否已连接成功
 
     // 统计
     quint64 m_tcpRxBytes = 0;
@@ -97,7 +102,7 @@ private:
     // === 通用方法 ===
     // TCP收到数据 -> 发到ZDDS
     void forwardTcpToZdds(const QByteArray &data, const QString &peerInfo);
-    // ZDDS收到数据 -> 发到TCP
+    // ZDDS收到数据 -> 发到TCP（ZDDS回调线程调用，仅做线程切换）
     void forwardZddsToTcp(const char* data, size_t len);
 
     void resetStats();

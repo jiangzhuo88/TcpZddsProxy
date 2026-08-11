@@ -1,6 +1,4 @@
 #include "ZDDSManager.h"
-#include <QMutex>
-#include <QMutexLocker>
 
 ZDDSManager* ZDDSManager::m_instance = nullptr;
 
@@ -38,13 +36,16 @@ void ZDDSManager::initialize()
     if (m_zddsInterface == nullptr) {
         m_zddsInterface = getInterfaceInstance();
     }
-    m_zddsInterface->regRecvCallbackFunc(staticOnRecvData, this);
-    m_zddsInterface->regZDDSStartSuccessNotify(staticOnStartSuccess, this);
-    bool ok = m_zddsInterface->startZDDS();
-    if (ok) {
-        emit logMessage(QString("[ZDDS] 启动成功"));
-    } else {
-        emit logMessage(QString("[ZDDS] 启动失败"));
+    if (!m_zddsStarted) {
+        m_zddsInterface->regRecvCallbackFunc(staticOnRecvData, this);
+        m_zddsInterface->regZDDSStartSuccessNotify(staticOnStartSuccess, this);
+        bool ok = m_zddsInterface->startZDDS();
+        m_zddsStarted = true;
+        if (ok) {
+            emit logMessage(QString("[ZDDS] 启动成功"));
+        } else {
+            emit logMessage(QString("[ZDDS] 启动失败"));
+        }
     }
 }
 
@@ -62,7 +63,10 @@ void ZDDSManager::subscribe(const char* domainName, const char* topicName, RecvC
 {
     if (m_zddsInterface == nullptr) return;
     m_zddsInterface->subMessage(domainName, topicName);
-    m_callbackMap[domainName][topicName].push_back(callback);
+    {
+        QMutexLocker locker(&m_callbackMutex);
+        m_callbackMap[domainName][topicName].push_back(callback);
+    }
     emit logMessage(QString("[ZDDS] 订阅 %1/%2").arg(domainName).arg(topicName));
 }
 
@@ -70,7 +74,10 @@ void ZDDSManager::unsubscribe(const char* domainName, const char* topicName)
 {
     if (m_zddsInterface == nullptr) return;
     m_zddsInterface->unSubMessage(domainName, topicName);
-    m_callbackMap[domainName].erase(topicName);
+    {
+        QMutexLocker locker(&m_callbackMutex);
+        m_callbackMap[domainName].erase(topicName);
+    }
     emit logMessage(QString("[ZDDS] 取消订阅 %1/%2").arg(domainName).arg(topicName));
 }
 
@@ -90,11 +97,17 @@ void ZDDSManager::ZDDS_CALLBACK staticOnRecvData(const char* domainName, const c
 {
     ZDDSManager* self = static_cast<ZDDSManager*>(context);
     if (!self || !data) return;
-    auto itDomain = self->m_callbackMap.find(domainName);
-    if (itDomain == self->m_callbackMap.end()) return;
-    auto itTopic = itDomain->second.find(topicName);
-    if (itTopic == itDomain->second.end()) return;
-    for (auto &cb : itTopic->second) {
+    // 拷贝回调列表到局部变量，缩小锁的临界区
+    std::list<RecvCallback> callbacks;
+    {
+        QMutexLocker locker(&self->m_callbackMutex);
+        auto itDomain = self->m_callbackMap.find(domainName);
+        if (itDomain == self->m_callbackMap.end()) return;
+        auto itTopic = itDomain->second.find(topicName);
+        if (itTopic == itDomain->second.end()) return;
+        callbacks = itTopic->second;
+    }
+    for (auto &cb : callbacks) {
         cb(data, len);
     }
 }

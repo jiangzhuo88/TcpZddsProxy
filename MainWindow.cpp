@@ -302,6 +302,7 @@ void MainWindow::onToggleStart()
 void MainWindow::onStateChanged()
 {
     bool running = m_proxyCore->isRunning();
+    bool connected = m_proxyCore->isConnected();
     ProxyMode mode = m_proxyCore->currentMode();
 
     updateUiEditableState(running);
@@ -314,12 +315,16 @@ void MainWindow::onStateChanged()
     }
 
     // 更新状态标签
-    if (running) {
+    if (!running) {
+        m_statusValueLabel->setText("已停止");
+        m_statusValueLabel->setStyleSheet("font-weight:bold;color:#e74c3c;");
+    } else if (connected) {
         m_statusValueLabel->setText("运行中");
         m_statusValueLabel->setStyleSheet("font-weight:bold;color:#27ae60;");
     } else {
-        m_statusValueLabel->setText("已停止");
-        m_statusValueLabel->setStyleSheet("font-weight:bold;color:#e74c3c;");
+        // 代理客户端模式：已启动但TCP尚未连接
+        m_statusValueLabel->setText("连接中...");
+        m_statusValueLabel->setStyleSheet("font-weight:bold;color:#f39c12;");
     }
 
     onUpdateStats();

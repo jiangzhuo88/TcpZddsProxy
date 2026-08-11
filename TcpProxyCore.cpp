@@ -45,6 +45,13 @@ bool TcpProxyCore::isRunning() const
     return m_running;
 }
 
+bool TcpProxyCore::isConnected() const
+{
+    if (m_cfg.mode == ProxyMode::ProxyServer)
+        return m_running;  // 服务端模式：监听即算连接
+    return m_running && m_serverSocketConnected;  // 客户端模式：需TCP已连接
+}
+
 bool TcpProxyCore::start()
 {
     if (m_running) {
@@ -90,6 +97,7 @@ bool TcpProxyCore::start()
     } else {
         // === 代理客户端：连接真实服务端 ===
         m_serverSocket = new QTcpSocket(this);
+        m_serverSocketConnected = false;
         connect(m_serverSocket, &QTcpSocket::connected, this, &TcpProxyCore::onServerSocketConnected);
         connect(m_serverSocket, &QTcpSocket::disconnected, this, &TcpProxyCore::onServerSocketDisconnected);
         connect(m_serverSocket, &QTcpSocket::readyRead, this, &TcpProxyCore::onServerSocketReadyRead);
@@ -98,7 +106,7 @@ bool TcpProxyCore::start()
         emit logMessage(QString("[代理客户端] 正在连接真实服务端 %1:%2 ...")
                             .arg(m_cfg.tcpHost).arg(m_cfg.tcpPort));
         m_serverSocket->connectToHost(m_cfg.tcpHost, m_cfg.tcpPort);
-        // 先标记为运行中，由connected/disconnected信号维护具体状态
+        // 标记为运行中（连接中），由 connected/error 信号维护具体状态
         ok = true;
         emit logMessage(QString("[配置] TCP->ZDDS: %1/%2, ZDDS->TCP: %1/%3")
                             .arg(m_cfg.zddsDomain).arg(m_cfg.zddsSendTopic).arg(m_cfg.zddsRecvTopic));
@@ -141,6 +149,7 @@ void TcpProxyCore::stop()
         m_serverSocket->close();
         m_serverSocket->deleteLater();
         m_serverSocket = nullptr;
+        m_serverSocketConnected = false;
         emit logMessage("[代理客户端] 已停止");
     }
 
@@ -203,16 +212,17 @@ void TcpProxyCore::onClientSocketError(QAbstractSocket::SocketError err)
 // ============================================================
 void TcpProxyCore::onServerSocketConnected()
 {
+    m_serverSocketConnected = true;
     emit logMessage(QString("[代理客户端] 已连接真实服务端 %1:%2")
                         .arg(m_cfg.tcpHost).arg(m_cfg.tcpPort));
-    m_running = true;
     emit stateChanged();
 }
 
 void TcpProxyCore::onServerSocketDisconnected()
 {
+    m_serverSocketConnected = false;
     emit logMessage(QString("[代理客户端] 与真实服务端断开连接"));
-    m_running = false;
+    // 不改 m_running，仍允许重连或重新启动；但状态标签反映实际连接状态
     emit stateChanged();
 }
 
@@ -231,6 +241,12 @@ void TcpProxyCore::onServerSocketError(QAbstractSocket::SocketError err)
 {
     if (!m_serverSocket) return;
     emit logMessage(QString("[错误] 服务端连接错误: %1").arg(m_serverSocket->errorString()));
+    // 连接失败时修正状态
+    if (!m_serverSocketConnected) {
+        m_running = false;
+        emit logMessage(QString("[代理客户端] 连接真实服务端失败，代理已停止"));
+        emit stateChanged();
+    }
     Q_UNUSED(err);
 }
 
@@ -254,7 +270,18 @@ void TcpProxyCore::forwardTcpToZdds(const QByteArray &data, const QString &peerI
 void TcpProxyCore::forwardZddsToTcp(const char *data, size_t len)
 {
     if (data == nullptr || len == 0) return;
+    // ZDDS回调在其内部线程执行，不能直接操作QTcpSocket
+    // 拷贝数据后通过 QMetaObject::invokeMethod 切换到主线程执行
     QByteArray bytes(data, (int)len);
+    QMetaObject::invokeMethod(this, "doForwardZddsToTcp",
+                              Qt::QueuedConnection,
+                              Q_ARG(QByteArray, bytes));
+}
+
+void TcpProxyCore::doForwardZddsToTcp(const QByteArray &bytes)
+{
+    // 此方法在主线程（Qt事件循环）中执行
+    size_t len = (size_t)bytes.size();
     m_zddsRxBytes += len;
     emit logMessage(QString("[ZDDS收<-] %1/%2 收到 %3字节: %4")
                         .arg(m_cfg.zddsDomain).arg(m_cfg.zddsRecvTopic)
