@@ -54,7 +54,7 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
         def.zddsRecvDomain = "TCPProxyRecvDomain";
         def.zddsSendTopic = "TcpToZdds";
         def.zddsRecvTopic = "ZddsToTcp";
-        def.language = 0;  // 默认中文
+        def.language = 1;  // 默认英文
         outCfg = def;
         m_lastCfg = def;
         saveConfig(def);

@@ -40,7 +40,7 @@ struct ProxyConfig {
     QString zddsRecvTopic;        // ZDDS接收主题（ZDDS->TCP方向）
 
     // 语言设置（0=中文, 1=英文）
-    int language = 0;
+    int language = 1;
 
     bool isValid() const {
         if (zddsSendDomain.isEmpty() || zddsRecvDomain.isEmpty() || zddsSendTopic.isEmpty() || zddsRecvTopic.isEmpty())
