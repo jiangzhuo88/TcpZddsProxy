@@ -114,7 +114,9 @@ bool TcpProxyCore::start()
         // === 代理服务端：监听端口，等待真实客户端 ===
         m_tcpServer = new QTcpServer(this);
         connect(m_tcpServer, &QTcpServer::newConnection, this, &TcpProxyCore::onNewClientConnection);
-        if (!m_tcpServer->listen(QHostAddress::Any, m_cfg.tcpPort)) {
+        // 如果配置了监听地址则绑定到指定地址，否则监听所有地址
+        QHostAddress bindAddr = m_cfg.tcpHost.isEmpty() ? QHostAddress::Any : QHostAddress(m_cfg.tcpHost);
+        if (!m_tcpServer->listen(bindAddr, m_cfg.tcpPort)) {
             m_tcpStatus = TcpLinkStatus::Error;
             emit logMessage(tr("[错误] 代理服务端监听端口 %1 失败: %2")
                                 .arg(m_cfg.tcpPort).arg(m_tcpServer->errorString()));
@@ -124,7 +126,8 @@ bool TcpProxyCore::start()
             return false;
         }
         m_tcpStatus = TcpLinkStatus::Listening;
-        emit logMessage(tr("[代理服务端] 已启动，监听端口 %1").arg(m_cfg.tcpPort));
+        QString listenAddr = m_cfg.tcpHost.isEmpty() ? QString("0.0.0.0") : m_cfg.tcpHost;
+        emit logMessage(tr("[代理服务端] 已启动，监听 %1:%2").arg(listenAddr).arg(m_cfg.tcpPort));
         emit logMessage(tr("[配置] TCP->ZDDS: %1/%3, ZDDS->TCP: %2/%4")
                             .arg(m_cfg.zddsSendDomain).arg(m_cfg.zddsRecvDomain).arg(m_cfg.zddsSendTopic).arg(m_cfg.zddsRecvTopic));
         ok = true;

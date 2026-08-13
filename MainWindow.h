@@ -58,7 +58,6 @@ private slots:
     void onClearLog();
     void onUpdateStats();
     void onSaveConfig();
-    void onLanguageChanged(int index);
     void onZddsStatusChanged();
 
 private:
@@ -75,7 +74,6 @@ private:
 
     // UI 组件
     QComboBox *m_modeCombo;
-    QComboBox *m_langCombo;
 
     // 配置区 labels (for retranslation)
     QLabel *m_modeLabel;
@@ -85,7 +83,6 @@ private:
     QLabel *m_zddsRecvDomainLabel;
     QLabel *m_zddsSendTopicLabel;
     QLabel *m_zddsRecvTopicLabel;
-    QLabel *m_langLabel;
 
     // TCP配置
     QLineEdit *m_tcpHostEdit;

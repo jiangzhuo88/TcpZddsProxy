@@ -83,6 +83,16 @@ MainWindow::MainWindow(QWidget *parent)
     , m_statsTimer(new QTimer(this))
 {
     setupUi();
+
+    // 从配置文件读取语言设置，在 retranslateUi 之前应用
+    ProxyConfig tmpCfg;
+    if (ConfigManager::getInstance()->loadConfig(tmpCfg)) {
+        LanguageManager::Language lang = (tmpCfg.language == 1)
+            ? LanguageManager::English : LanguageManager::Chinese;
+        LanguageManager::instance()->setLanguage(lang);
+    }
+
+    retranslateUi();   // 先填充 combo items 和所有文本，再加载配置
     loadConfigFromFile();
 
     connect(m_proxyCore, &TcpProxyCore::logMessage, this, &MainWindow::appendLog);
@@ -90,7 +100,6 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ZDDSManager::getInstance(), &ZDDSManager::logMessage, this, &MainWindow::appendLog);
     connect(ZDDSManager::getInstance(), &ZDDSManager::statusChanged, this, &MainWindow::onZddsStatusChanged);
     connect(ConfigManager::getInstance(), &ConfigManager::logMessage, this, &MainWindow::appendLog);
-    connect(LanguageManager::instance(), &LanguageManager::languageChanged, this, &MainWindow::retranslateUi);
 
     m_statsTimer->setInterval(1000);
     connect(m_statsTimer, &QTimer::timeout, this, &MainWindow::onUpdateStats);
@@ -98,7 +107,6 @@ MainWindow::MainWindow(QWidget *parent)
 
     onStateChanged();
     onUpdateStats();
-    retranslateUi();
 }
 
 MainWindow::~MainWindow()
@@ -131,16 +139,6 @@ void MainWindow::setupUi()
     cfgLayout->setContentsMargins(12, 16, 12, 12);
 
     int row = 0;
-    m_langLabel = new QLabel(m_configBox);
-    cfgLayout->addWidget(m_langLabel, row, 0);
-    m_langCombo = new QComboBox(m_configBox);
-    m_langCombo->addItem(LanguageManager::languageDisplayName(LanguageManager::Chinese), (int)LanguageManager::Chinese);
-    m_langCombo->addItem(LanguageManager::languageDisplayName(LanguageManager::English), (int)LanguageManager::English);
-    cfgLayout->addWidget(m_langCombo, row, 1);
-    connect(m_langCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &MainWindow::onLanguageChanged);
-    row++;
-
     m_modeLabel = new QLabel(m_configBox);
     cfgLayout->addWidget(m_modeLabel, row, 0);
     m_modeCombo = new QComboBox(m_configBox);
@@ -348,13 +346,10 @@ void MainWindow::onSaveConfig()
 void MainWindow::onProxyModeChanged(int index)
 {
     ProxyMode mode = (ProxyMode)m_modeCombo->itemData(index).toInt();
-    bool isClientMode = (mode == ProxyMode::ProxyClient);
-    m_tcpHostLabel->setEnabled(isClientMode);
-    m_tcpHostEdit->setEnabled(isClientMode);
-    if (isClientMode) {
+    if (mode == ProxyMode::ProxyClient) {
         m_tcpHostLabel->setText(tr("真实服务端地址:"));
     } else {
-        m_tcpHostLabel->setText(tr("(服务端模式监听所有地址)"));
+        m_tcpHostLabel->setText(tr("监听地址:"));
     }
 }
 
@@ -381,8 +376,8 @@ ProxyConfig MainWindow::collectConfigFromUi()
 void MainWindow::updateUiEditableState(bool running)
 {
     m_modeCombo->setEnabled(!running);
-    m_tcpHostEdit->setEnabled(!running && (m_modeCombo->currentData().toInt() == (int)ProxyMode::ProxyClient));
-    m_tcpHostLabel->setEnabled(!running && (m_modeCombo->currentData().toInt() == (int)ProxyMode::ProxyClient));
+    m_tcpHostEdit->setEnabled(!running);
+    m_tcpHostLabel->setEnabled(!running);
     m_tcpPortSpin->setEnabled(!running);
     m_zddsSendDomainEdit->setEnabled(!running);
     m_zddsRecvDomainEdit->setEnabled(!running);
@@ -503,7 +498,10 @@ void MainWindow::updateStatusPanel()
         break;
     case TcpLinkStatus::Listening:
         m_tcpLinkInd->setColor(StatusColor::Green);
-        m_tcpLinkInd->setText(tr("监听中 (端口 %1)").arg(cfg.tcpPort));
+        {
+            QString listenAddr = cfg.tcpHost.isEmpty() ? QString("0.0.0.0") : cfg.tcpHost;
+            m_tcpLinkInd->setText(tr("监听中 (%1:%2)").arg(listenAddr).arg(cfg.tcpPort));
+        }
         m_tcpLinkInd->setDetail("");
         break;
     case TcpLinkStatus::Connecting:
@@ -599,7 +597,6 @@ void MainWindow::retranslateUi()
 
     // Config box
     m_configBox->setTitle(tr("配置"));
-    m_langLabel->setText(tr("语言:"));
     m_modeLabel->setText(tr("代理模式:"));
     m_tcpPortLabel->setText(tr("TCP端口:"));
     m_zddsSendDomainLabel->setText(tr("ZDDS发送域名称:"));
@@ -652,12 +649,4 @@ void MainWindow::retranslateUi()
 
     // Refresh status panel with translated strings
     onStateChanged();
-
-    // Update language combo display names (native names, not translated)
-    int langIdx = m_langCombo->currentIndex();
-    m_langCombo->blockSignals(true);
-    m_langCombo->setItemText(0, LanguageManager::languageDisplayName(LanguageManager::Chinese));
-    m_langCombo->setItemText(1, LanguageManager::languageDisplayName(LanguageManager::English));
-    m_langCombo->setCurrentIndex(langIdx);
-    m_langCombo->blockSignals(false);
 }

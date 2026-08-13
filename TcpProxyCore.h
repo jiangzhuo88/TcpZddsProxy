@@ -30,14 +30,17 @@ struct ProxyConfig {
     ProxyMode mode = ProxyMode::ProxyServer;
 
     // TCP配置
-    QString tcpHost;      // ProxyClient模式下：真实服务端地址；ProxyServer模式下忽略（监听Any）
-    int tcpPort = 0;      // ProxyClient模式下：真实服务端端口；ProxyServer模式下：本地监听端口
+    QString tcpHost;      // ProxyClient模式：真实服务端地址；ProxyServer模式：监听绑定地址（空=0.0.0.0所有地址）
+    int tcpPort = 0;      // ProxyClient模式：真实服务端端口；ProxyServer模式：本地监听端口
 
     // ZDDS配置
     QString zddsSendDomain;           // ZDDS发送域名称
     QString zddsRecvDomain;           // ZDDS接收域名称
     QString zddsSendTopic;        // ZDDS发送主题（TCP->ZDDS方向）
     QString zddsRecvTopic;        // ZDDS接收主题（ZDDS->TCP方向）
+
+    // 语言设置（0=中文, 1=英文）
+    int language = 0;
 
     bool isValid() const {
         if (zddsSendDomain.isEmpty() || zddsRecvDomain.isEmpty() || zddsSendTopic.isEmpty() || zddsRecvTopic.isEmpty())
