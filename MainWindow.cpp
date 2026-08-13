@@ -370,6 +370,8 @@ ProxyConfig MainWindow::collectConfigFromUi()
     cfg.zddsRecvDomain = m_zddsRecvDomainEdit->text().trimmed();
     cfg.zddsSendTopic = m_zddsSendTopicEdit->text().trimmed();
     cfg.zddsRecvTopic = m_zddsRecvTopicEdit->text().trimmed();
+    // 保留当前语言设置，不因保存而丢失
+    cfg.language = (int)LanguageManager::instance()->currentLanguage();
     return cfg;
 }
 
