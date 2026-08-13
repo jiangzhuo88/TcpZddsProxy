@@ -6,12 +6,23 @@
 #include <QTcpSocket>
 #include <QVector>
 #include <QByteArray>
+#include <QDateTime>
 
 class ZDDSManager;
 
 enum class ProxyMode {
     ProxyServer = 0,   // 代理服务端：监听TCP端口，接收真实客户端连接，通过ZDDS转发
     ProxyClient = 1    // 代理客户端：连接真实服务端，通过ZDDS转发
+};
+
+// TCP链路状态
+enum class TcpLinkStatus {
+    Stopped       = 0,   // 未启动
+    Listening     = 1,   // 服务端模式：正在监听
+    Connecting    = 2,   // 客户端模式：正在连接
+    Connected     = 3,   // 已连接
+    Disconnected  = 4,   // 已断开
+    Error         = 5    // 错误
 };
 
 // 配置结构
@@ -53,6 +64,16 @@ public:
     bool isConnected() const;  // TCP实际连接是否建立（代理客户端模式有意义）
     ProxyMode currentMode() const { return m_cfg.mode; }
 
+    // === 状态查询 ===
+    TcpLinkStatus tcpLinkStatus() const;
+    bool isZddsSubscribed() const { return m_zddsSubscribed; }
+    int clientCount() const { return m_clientSockets.size(); }
+    QString tcpPeerInfo() const;   // 当前TCP连接的对端信息
+
+    // 数据流活跃状态（最近5秒内有数据则为活跃）
+    bool isTcpToZddsActive() const;
+    bool isZddsToTcpActive() const;
+
     // 统计
     quint64 tcpRxBytes() const { return m_tcpRxBytes; }
     quint64 tcpTxBytes() const { return m_tcpTxBytes; }
@@ -82,6 +103,7 @@ private slots:
 private:
     ProxyConfig m_cfg;
     bool m_running = false;
+    TcpLinkStatus m_tcpStatus = TcpLinkStatus::Stopped;
 
     // === ProxyServer模式 ===
     QTcpServer *m_tcpServer = nullptr;
@@ -96,6 +118,10 @@ private:
     quint64 m_tcpTxBytes = 0;
     quint64 m_zddsRxBytes = 0;
     quint64 m_zddsTxBytes = 0;
+
+    // 数据流活跃时间戳
+    QDateTime m_lastTcpToZddsTime;
+    QDateTime m_lastZddsToTcpTime;
 
     // ZDDS回调注册ID
     bool m_zddsSubscribed = false;
