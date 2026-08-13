@@ -71,14 +71,13 @@ private:
     void updateStatusPanel();
 
     // 创建状态指示器行
-    StatusIndicator* createStatusRow(QGridLayout *layout, int row, const QString &key);
+    StatusIndicator* createStatusRow(QGridLayout *layout, int row);
 
     // UI 组件
     QComboBox *m_modeCombo;
     QComboBox *m_langCombo;
 
     // 配置区 labels (for retranslation)
-    QLabel *m_configGroupLabel;
     QLabel *m_modeLabel;
     QLabel *m_tcpHostLabel;
     QLabel *m_tcpPortLabel;

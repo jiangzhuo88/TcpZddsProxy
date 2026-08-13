@@ -1,9 +1,5 @@
 #include "LanguageManager.h"
 #include <QCoreApplication>
-#include <QFile>
-#include <QJsonDocument>
-#include <QJsonParseError>
-#include <QFileInfo>
 #include <QDir>
 
 LanguageManager* LanguageManager::instance()
@@ -15,60 +11,37 @@ LanguageManager* LanguageManager::instance()
 LanguageManager::LanguageManager(QObject *parent)
     : QObject(parent)
 {
-    loadTranslations(m_currentLang);
-}
-
-QString LanguageManager::translationsFilePath(Language lang) const
-{
-    QString appDir = QCoreApplication::applicationDirPath();
-    QString subDir = (lang == Chinese) ? "translations/translations_zh.json"
-                                       : "translations/translations_en.json";
-    return QDir(appDir).filePath(subDir);
-}
-
-void LanguageManager::loadTranslations(Language lang)
-{
-    // Try application directory first, then source directory (for development)
-    QString path = translationsFilePath(lang);
-    QFile file(path);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        // Fallback: go up from bin/ to project root, then look for translations/
-        QDir dir(QCoreApplication::applicationDirPath());
-        dir.cdUp();  // go up from bin/ to project root
-        path = dir.filePath("translations/translations_" +
-                      QString(lang == Chinese ? "zh" : "en") + ".json");
-        file.setFileName(path);
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-            m_translations = QJsonObject();
-            return;
-        }
-    }
-
-    QJsonParseError err;
-    QJsonDocument doc = QJsonDocument::fromJson(file.readAll(), &err);
-    file.close();
-
-    if (err.error != QJsonParseError::NoError || !doc.isObject()) {
-        m_translations = QJsonObject();
-        return;
-    }
-    m_translations = doc.object();
 }
 
 void LanguageManager::setLanguage(Language lang)
 {
     if (lang == m_currentLang) return;
-    m_currentLang = lang;
-    loadTranslations(lang);
-    emit languageChanged();
-}
 
-QString LanguageManager::translate(const QString &key) const
-{
-    if (m_translations.contains(key)) {
-        return m_translations.value(key).toString();
+    // 移除旧的翻译器
+    if (m_translator) {
+        qApp->removeTranslator(m_translator);
+        delete m_translator;
+        m_translator = nullptr;
     }
-    return key;
+
+    // 英文模式：加载 .qm 翻译文件
+    if (lang == English) {
+        m_translator = new QTranslator();
+        // 优先从 Qt 资源系统加载
+        bool loaded = m_translator->load(":/translations/tcpzddsproxy_en.qm");
+        if (!loaded) {
+            // 回退：从可执行文件同目录加载
+            QString appDir = QCoreApplication::applicationDirPath();
+            loaded = m_translator->load("tcpzddsproxy_en.qm", appDir + "/translations");
+        }
+        if (loaded) {
+            qApp->installTranslator(m_translator);
+        }
+    }
+    // 中文模式：不加载翻译器，直接使用源字符串
+
+    m_currentLang = lang;
+    emit languageChanged();
 }
 
 QString LanguageManager::languageDisplayName(Language lang)

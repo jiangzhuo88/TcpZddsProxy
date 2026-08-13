@@ -90,6 +90,7 @@ MainWindow::MainWindow(QWidget *parent)
     connect(ZDDSManager::getInstance(), &ZDDSManager::logMessage, this, &MainWindow::appendLog);
     connect(ZDDSManager::getInstance(), &ZDDSManager::statusChanged, this, &MainWindow::onZddsStatusChanged);
     connect(ConfigManager::getInstance(), &ConfigManager::logMessage, this, &MainWindow::appendLog);
+    connect(LanguageManager::instance(), &LanguageManager::languageChanged, this, &MainWindow::retranslateUi);
 
     m_statsTimer->setInterval(1000);
     connect(m_statsTimer, &QTimer::timeout, this, &MainWindow::onUpdateStats);
@@ -102,7 +103,6 @@ MainWindow::MainWindow(QWidget *parent)
 
 MainWindow::~MainWindow()
 {
-    // 关闭窗口前先保存当前配置
     if (!m_proxyCore->isRunning()) {
         ProxyConfig cfg = collectConfigFromUi();
         if (cfg.isValid()) {
@@ -131,7 +131,6 @@ void MainWindow::setupUi()
     cfgLayout->setContentsMargins(12, 16, 12, 12);
 
     int row = 0;
-    // 语言切换
     m_langLabel = new QLabel(m_configBox);
     cfgLayout->addWidget(m_langLabel, row, 0);
     m_langCombo = new QComboBox(m_configBox);
@@ -142,7 +141,6 @@ void MainWindow::setupUi()
             this, &MainWindow::onLanguageChanged);
     row++;
 
-    // 代理模式
     m_modeLabel = new QLabel(m_configBox);
     cfgLayout->addWidget(m_modeLabel, row, 0);
     m_modeCombo = new QComboBox(m_configBox);
@@ -151,14 +149,12 @@ void MainWindow::setupUi()
             this, &MainWindow::onProxyModeChanged);
     row++;
 
-    // TCP主机地址
     m_tcpHostLabel = new QLabel(m_configBox);
     cfgLayout->addWidget(m_tcpHostLabel, row, 0);
     m_tcpHostEdit = new QLineEdit(m_configBox);
     cfgLayout->addWidget(m_tcpHostEdit, row, 1);
     row++;
 
-    // TCP端口
     m_tcpPortLabel = new QLabel(m_configBox);
     cfgLayout->addWidget(m_tcpPortLabel, row, 0);
     m_tcpPortSpin = new QSpinBox(m_configBox);
@@ -167,33 +163,26 @@ void MainWindow::setupUi()
     cfgLayout->addWidget(m_tcpPortSpin, row, 1);
     row++;
 
-    // SendZDDS域
     m_zddsSendDomainLabel = new QLabel(m_configBox);
     cfgLayout->addWidget(m_zddsSendDomainLabel, row, 0);
     m_zddsSendDomainEdit = new QLineEdit(m_configBox);
     cfgLayout->addWidget(m_zddsSendDomainEdit, row, 1);
-
-    // ZDDS发送主题
     m_zddsSendTopicLabel = new QLabel(m_configBox);
     cfgLayout->addWidget(m_zddsSendTopicLabel, row, 2);
     m_zddsSendTopicEdit = new QLineEdit(m_configBox);
     cfgLayout->addWidget(m_zddsSendTopicEdit, row, 3);
     row++;
 
-    // ZDDS域
     m_zddsRecvDomainLabel = new QLabel(m_configBox);
     cfgLayout->addWidget(m_zddsRecvDomainLabel, row, 0);
     m_zddsRecvDomainEdit = new QLineEdit(m_configBox);
     cfgLayout->addWidget(m_zddsRecvDomainEdit, row, 1);
-
-    // ZDDS接收主题
     m_zddsRecvTopicLabel = new QLabel(m_configBox);
     cfgLayout->addWidget(m_zddsRecvTopicLabel, row, 2);
     m_zddsRecvTopicEdit = new QLineEdit(m_configBox);
     cfgLayout->addWidget(m_zddsRecvTopicEdit, row, 3);
     row++;
 
-    // 控制按钮
     QHBoxLayout *btnLayout = new QHBoxLayout();
     m_saveBtn = new QPushButton(m_configBox);
     m_saveBtn->setMinimumHeight(34);
@@ -216,22 +205,20 @@ void MainWindow::setupUi()
     stLayout->setSpacing(6);
     stLayout->setContentsMargins(12, 16, 12, 12);
 
-    // 创建6个状态指示器
     int srow = 0;
-    m_zddsStatusInd = createStatusRow(stLayout, srow, "status_zdds"); srow++;
-    m_zddsSubInd = createStatusRow(stLayout, srow, "status_zdds_sub"); srow++;
-    m_tcpLinkInd = createStatusRow(stLayout, srow, "status_tcp_link"); srow++;
-    m_clientsInd = createStatusRow(stLayout, srow, "status_clients"); srow++;
+    m_zddsStatusInd = createStatusRow(stLayout, srow); srow++;
+    m_zddsSubInd = createStatusRow(stLayout, srow); srow++;
+    m_tcpLinkInd = createStatusRow(stLayout, srow); srow++;
+    m_clientsInd = createStatusRow(stLayout, srow); srow++;
 
-    // 分隔线
     QFrame *line = new QFrame(m_statusBox);
     line->setFrameShape(QFrame::HLine);
     line->setFrameShadow(QFrame::Sunken);
     stLayout->addWidget(line, srow, 0, 1, 4);
     srow++;
 
-    m_flowTcpZddsInd = createStatusRow(stLayout, srow, "status_flow_tcp_zdds"); srow++;
-    m_flowZddsTcpInd = createStatusRow(stLayout, srow, "status_flow_zdds_tcp"); srow++;
+    m_flowTcpZddsInd = createStatusRow(stLayout, srow); srow++;
+    m_flowZddsTcpInd = createStatusRow(stLayout, srow); srow++;
 
     mainLayout->addWidget(m_statusBox);
 
@@ -294,16 +281,13 @@ void MainWindow::setupUi()
 
     mainLayout->addWidget(m_logBox, 1);
 
-    // 初始化模式切换的UI可见性
     onProxyModeChanged(m_modeCombo->currentIndex());
 }
 
-StatusIndicator* MainWindow::createStatusRow(QGridLayout *layout, int row, const QString &key)
+StatusIndicator* MainWindow::createStatusRow(QGridLayout *layout, int row)
 {
     StatusIndicator *ind = new StatusIndicator(m_statusBox);
     layout->addWidget(ind, row, 0, 1, 4);
-    // Store the key for retranslation
-    ind->setProperty("trKey", key);
     return ind;
 }
 
@@ -340,20 +324,24 @@ void MainWindow::applyConfigToUi(const ProxyConfig &cfg)
 void MainWindow::onSaveConfig()
 {
     if (m_proxyCore->isRunning()) {
-        QMessageBox::information(this, LTR("msg_title_info"), LTR("msg_stop_before_save"));
+        QMessageBox::information(this, tr("提示"), tr("请先停止代理后再保存配置"));
         return;
     }
     ProxyConfig cfg = collectConfigFromUi();
     if (!cfg.isValid()) {
-        QMessageBox::warning(this, LTR("msg_title_error"), LTR("msg_config_error"));
+        QMessageBox::warning(this, tr("错误"),
+            tr("请检查配置：\n"
+               "1. TCP端口必须在 1-65535 之间\n"
+               "2. 代理客户端模式必须填写真实服务端地址\n"
+               "3. ZDDS域名称、发送主题、接收主题均不能为空"));
         return;
     }
     bool ok = ConfigManager::getInstance()->saveConfig(cfg);
     if (ok) {
-        QMessageBox::information(this, LTR("msg_title_success"),
-            LTR("msg_save_success").arg(ConfigManager::getInstance()->configFilePath()));
+        QMessageBox::information(this, tr("保存成功"),
+            tr("配置已保存到：\n%1").arg(ConfigManager::getInstance()->configFilePath()));
     } else {
-        QMessageBox::warning(this, LTR("msg_title_error"), LTR("msg_save_failed"));
+        QMessageBox::warning(this, tr("保存失败"), tr("请检查日志获取详细错误信息"));
     }
 }
 
@@ -364,9 +352,9 @@ void MainWindow::onProxyModeChanged(int index)
     m_tcpHostLabel->setEnabled(isClientMode);
     m_tcpHostEdit->setEnabled(isClientMode);
     if (isClientMode) {
-        m_tcpHostLabel->setText(LTR("label_server_addr"));
+        m_tcpHostLabel->setText(tr("真实服务端地址:"));
     } else {
-        m_tcpHostLabel->setText(LTR("label_server_addr_disabled"));
+        m_tcpHostLabel->setText(tr("(服务端模式监听所有地址)"));
     }
 }
 
@@ -374,7 +362,7 @@ void MainWindow::onLanguageChanged(int index)
 {
     LanguageManager::Language lang = (LanguageManager::Language)m_langCombo->itemData(index).toInt();
     LanguageManager::instance()->setLanguage(lang);
-    retranslateUi();
+    // retranslateUi() will be triggered by languageChanged signal
 }
 
 ProxyConfig MainWindow::collectConfigFromUi()
@@ -402,11 +390,11 @@ void MainWindow::updateUiEditableState(bool running)
     m_zddsRecvTopicEdit->setEnabled(!running);
 
     if (running) {
-        m_startBtn->setText(LTR("btn_stop"));
+        m_startBtn->setText(tr("停止代理"));
         m_startBtn->setStyleSheet("QPushButton{font-weight:bold;padding:6px 24px;background-color:#e74c3c;color:white;border:none;border-radius:4px;}"
                                   "QPushButton:hover{background-color:#c0392b;}");
     } else {
-        m_startBtn->setText(LTR("btn_start"));
+        m_startBtn->setText(tr("启动代理"));
         m_startBtn->setStyleSheet("QPushButton{font-weight:bold;padding:6px 24px;background-color:#27ae60;color:white;border:none;border-radius:4px;}"
                                   "QPushButton:hover{background-color:#1e8449;}");
     }
@@ -419,7 +407,11 @@ void MainWindow::onToggleStart()
     } else {
         ProxyConfig cfg = collectConfigFromUi();
         if (!cfg.isValid()) {
-            QMessageBox::warning(this, LTR("msg_title_error"), LTR("msg_config_error"));
+            QMessageBox::warning(this, tr("错误"),
+                tr("请检查配置：\n"
+                   "1. TCP端口必须在 1-65535 之间\n"
+                   "2. 代理客户端模式必须填写真实服务端地址\n"
+                   "3. ZDDS域名称、发送主题、接收主题均不能为空"));
             return;
         }
         m_proxyCore->setConfig(cfg);
@@ -435,22 +427,20 @@ void MainWindow::onStateChanged()
 
     updateUiEditableState(running);
 
-    // 更新模式标签
     if (mode == ProxyMode::ProxyServer) {
-        m_modeValueLabel->setText(LTR("mode_server"));
+        m_modeValueLabel->setText(tr("代理服务端"));
     } else {
-        m_modeValueLabel->setText(LTR("mode_client"));
+        m_modeValueLabel->setText(tr("代理客户端"));
     }
 
-    // 更新状态标签
     if (!running) {
-        m_statusValueLabel->setText(LTR("run_stopped"));
+        m_statusValueLabel->setText(tr("已停止"));
         m_statusValueLabel->setStyleSheet("font-weight:bold;color:#e74c3c;");
     } else if (connected) {
-        m_statusValueLabel->setText(LTR("run_running"));
+        m_statusValueLabel->setText(tr("运行中"));
         m_statusValueLabel->setStyleSheet("font-weight:bold;color:#27ae60;");
     } else {
-        m_statusValueLabel->setText(LTR("run_connecting"));
+        m_statusValueLabel->setText(tr("连接中..."));
         m_statusValueLabel->setStyleSheet("font-weight:bold;color:#f39c12;");
     }
 
@@ -470,22 +460,22 @@ void MainWindow::updateStatusPanel()
     switch (zddsStatus) {
     case ZDDSManager::ZddsStatus::NotStarted:
         m_zddsStatusInd->setColor(StatusColor::Gray);
-        m_zddsStatusInd->setText(LTR("status_zdds_not_started"));
+        m_zddsStatusInd->setText(tr("未启动"));
         m_zddsStatusInd->setDetail("");
         break;
     case ZDDSManager::ZddsStatus::Starting:
         m_zddsStatusInd->setColor(StatusColor::Yellow);
-        m_zddsStatusInd->setText(LTR("status_zdds_starting"));
+        m_zddsStatusInd->setText(tr("启动中..."));
         m_zddsStatusInd->setDetail("");
         break;
     case ZDDSManager::ZddsStatus::Started:
         m_zddsStatusInd->setColor(StatusColor::Green);
-        m_zddsStatusInd->setText(LTR("status_zdds_connected"));
+        m_zddsStatusInd->setText(tr("已接入"));
         m_zddsStatusInd->setDetail("");
         break;
     case ZDDSManager::ZddsStatus::Failed:
         m_zddsStatusInd->setColor(StatusColor::Red);
-        m_zddsStatusInd->setText(LTR("status_zdds_failed"));
+        m_zddsStatusInd->setText(tr("启动失败"));
         m_zddsStatusInd->setDetail("");
         break;
     }
@@ -493,12 +483,12 @@ void MainWindow::updateStatusPanel()
     // 2. ZDDS Subscription
     if (m_proxyCore->isZddsSubscribed()) {
         m_zddsSubInd->setColor(StatusColor::Green);
-        m_zddsSubInd->setText(LTR("status_sub_subscribed"));
+        m_zddsSubInd->setText(tr("已订阅"));
         const ProxyConfig &cfg = m_proxyCore->config();
         m_zddsSubInd->setDetail(QString("%1/%2").arg(cfg.zddsRecvDomain).arg(cfg.zddsRecvTopic));
     } else {
         m_zddsSubInd->setColor(StatusColor::Gray);
-        m_zddsSubInd->setText(LTR("status_sub_not_subscribed"));
+        m_zddsSubInd->setText(tr("未订阅"));
         m_zddsSubInd->setDetail("");
     }
 
@@ -508,32 +498,32 @@ void MainWindow::updateStatusPanel()
     switch (tcpStatus) {
     case TcpLinkStatus::Stopped:
         m_tcpLinkInd->setColor(StatusColor::Gray);
-        m_tcpLinkInd->setText(LTR("status_tcp_stopped"));
+        m_tcpLinkInd->setText(tr("未启动"));
         m_tcpLinkInd->setDetail("");
         break;
     case TcpLinkStatus::Listening:
         m_tcpLinkInd->setColor(StatusColor::Green);
-        m_tcpLinkInd->setText(LTR("status_tcp_listening").arg(cfg.tcpPort));
+        m_tcpLinkInd->setText(tr("监听中 (端口 %1)").arg(cfg.tcpPort));
         m_tcpLinkInd->setDetail("");
         break;
     case TcpLinkStatus::Connecting:
         m_tcpLinkInd->setColor(StatusColor::Yellow);
-        m_tcpLinkInd->setText(LTR("status_tcp_connecting").arg(cfg.tcpHost).arg(cfg.tcpPort));
+        m_tcpLinkInd->setText(tr("连接中 (%1:%2)").arg(cfg.tcpHost).arg(cfg.tcpPort));
         m_tcpLinkInd->setDetail("");
         break;
     case TcpLinkStatus::Connected:
         m_tcpLinkInd->setColor(StatusColor::Green);
-        m_tcpLinkInd->setText(LTR("status_tcp_connected").arg(cfg.tcpHost).arg(cfg.tcpPort));
+        m_tcpLinkInd->setText(tr("已连接 (%1:%2)").arg(cfg.tcpHost).arg(cfg.tcpPort));
         m_tcpLinkInd->setDetail(m_proxyCore->tcpPeerInfo());
         break;
     case TcpLinkStatus::Disconnected:
         m_tcpLinkInd->setColor(StatusColor::Red);
-        m_tcpLinkInd->setText(LTR("status_tcp_disconnected"));
+        m_tcpLinkInd->setText(tr("已断开"));
         m_tcpLinkInd->setDetail("");
         break;
     case TcpLinkStatus::Error:
         m_tcpLinkInd->setColor(StatusColor::Red);
-        m_tcpLinkInd->setText(LTR("status_tcp_error"));
+        m_tcpLinkInd->setText(tr("错误"));
         m_tcpLinkInd->setDetail("");
         break;
     }
@@ -543,17 +533,13 @@ void MainWindow::updateStatusPanel()
     if (m_proxyCore->isRunning() && cfg.mode == ProxyMode::ProxyServer) {
         if (clientCount > 0) {
             m_clientsInd->setColor(StatusColor::Green);
-            m_clientsInd->setText(LTR("status_clients_count").arg(clientCount));
+            m_clientsInd->setText(tr("%1 个客户端").arg(clientCount));
             m_clientsInd->setDetail(m_proxyCore->tcpPeerInfo());
         } else {
             m_clientsInd->setColor(StatusColor::Yellow);
-            m_clientsInd->setText(LTR("status_clients_none"));
+            m_clientsInd->setText(tr("无客户端"));
             m_clientsInd->setDetail("");
         }
-    } else if (m_proxyCore->isRunning() && cfg.mode == ProxyMode::ProxyClient) {
-        m_clientsInd->setColor(StatusColor::Gray);
-        m_clientsInd->setText("-");
-        m_clientsInd->setDetail("");
     } else {
         m_clientsInd->setColor(StatusColor::Gray);
         m_clientsInd->setText("-");
@@ -563,22 +549,22 @@ void MainWindow::updateStatusPanel()
     // 5. Data Flow TCP->ZDDS
     if (m_proxyCore->isTcpToZddsActive()) {
         m_flowTcpZddsInd->setColor(StatusColor::Green);
-        m_flowTcpZddsInd->setText(LTR("status_flow_active").arg(formatBytes(m_proxyCore->zddsTxBytes())));
+        m_flowTcpZddsInd->setText(tr("活跃 (%1)").arg(formatBytes(m_proxyCore->zddsTxBytes())));
         m_flowTcpZddsInd->setDetail(QString("%1/%2").arg(cfg.zddsSendDomain).arg(cfg.zddsSendTopic));
     } else {
         m_flowTcpZddsInd->setColor(StatusColor::Gray);
-        m_flowTcpZddsInd->setText(LTR("status_flow_idle"));
+        m_flowTcpZddsInd->setText(tr("空闲"));
         m_flowTcpZddsInd->setDetail("");
     }
 
     // 6. Data Flow ZDDS->TCP
     if (m_proxyCore->isZddsToTcpActive()) {
         m_flowZddsTcpInd->setColor(StatusColor::Green);
-        m_flowZddsTcpInd->setText(LTR("status_flow_active").arg(formatBytes(m_proxyCore->zddsRxBytes())));
+        m_flowZddsTcpInd->setText(tr("活跃 (%1)").arg(formatBytes(m_proxyCore->zddsRxBytes())));
         m_flowZddsTcpInd->setDetail(QString("%1/%2").arg(cfg.zddsRecvDomain).arg(cfg.zddsRecvTopic));
     } else {
         m_flowZddsTcpInd->setColor(StatusColor::Gray);
-        m_flowZddsTcpInd->setText(LTR("status_flow_idle"));
+        m_flowZddsTcpInd->setText(tr("空闲"));
         m_flowZddsTcpInd->setDetail("");
     }
 }
@@ -589,7 +575,6 @@ void MainWindow::onUpdateStats()
     m_tcpTxValueLabel->setText(formatBytes(m_proxyCore->tcpTxBytes()));
     m_zddsRxValueLabel->setText(formatBytes(m_proxyCore->zddsRxBytes()));
     m_zddsTxValueLabel->setText(formatBytes(m_proxyCore->zddsTxBytes()));
-    // Also refresh status panel (data flow activity changes over time)
     updateStatusPanel();
 }
 
@@ -610,58 +595,57 @@ void MainWindow::onClearLog()
 
 void MainWindow::retranslateUi()
 {
-    setWindowTitle(LTR("app_title"));
+    setWindowTitle(tr("TCP-ZDDS 双向代理软件"));
 
     // Config box
-    m_configBox->setTitle(LTR("config_group"));
-    m_langLabel->setText(LTR("btn_language"));
-    m_modeLabel->setText(LTR("label_proxy_mode"));
-    m_tcpPortLabel->setText(LTR("label_tcp_port"));
-    m_zddsSendDomainLabel->setText(LTR("label_zdds_send_domain"));
-    m_zddsRecvDomainLabel->setText(LTR("label_zdds_recv_domain"));
-    m_zddsSendTopicLabel->setText(LTR("label_zdds_send_topic"));
-    m_zddsRecvTopicLabel->setText(LTR("label_zdds_recv_topic"));
-    m_tcpHostEdit->setPlaceholderText(LTR("placeholder_host"));
-    m_zddsSendDomainEdit->setPlaceholderText(LTR("placeholder_domain"));
-    m_zddsRecvDomainEdit->setPlaceholderText(LTR("placeholder_domain"));
-    m_zddsSendTopicEdit->setPlaceholderText(LTR("placeholder_send_topic"));
-    m_zddsRecvTopicEdit->setPlaceholderText(LTR("placeholder_recv_topic"));
-    m_saveBtn->setText(LTR("btn_save_config"));
-    m_clearLogBtn->setText(LTR("btn_clear_log"));
+    m_configBox->setTitle(tr("配置"));
+    m_langLabel->setText(tr("语言:"));
+    m_modeLabel->setText(tr("代理模式:"));
+    m_tcpPortLabel->setText(tr("TCP端口:"));
+    m_zddsSendDomainLabel->setText(tr("ZDDS发送域名称:"));
+    m_zddsRecvDomainLabel->setText(tr("ZDDS接收域名称:"));
+    m_zddsSendTopicLabel->setText(tr("ZDDS发送主题(TCP→ZDDS):"));
+    m_zddsRecvTopicLabel->setText(tr("ZDDS接收主题(ZDDS→TCP):"));
+    m_tcpHostEdit->setPlaceholderText(tr("例如: 192.168.1.100 或 127.0.0.1"));
+    m_zddsSendDomainEdit->setPlaceholderText(tr("例如: DomainTCPProxy"));
+    m_zddsRecvDomainEdit->setPlaceholderText(tr("例如: DomainTCPProxy"));
+    m_zddsSendTopicEdit->setPlaceholderText(tr("例如: TopicTcpToZdds"));
+    m_zddsRecvTopicEdit->setPlaceholderText(tr("例如: TopicZddsToTcp"));
+    m_saveBtn->setText(tr("保存配置"));
+    m_clearLogBtn->setText(tr("清空日志"));
 
     // Mode combo items
     int curIdx = m_modeCombo->currentIndex();
     m_modeCombo->blockSignals(true);
     m_modeCombo->clear();
-    m_modeCombo->addItem(LTR("mode_proxy_server"), (int)ProxyMode::ProxyServer);
-    m_modeCombo->addItem(LTR("mode_proxy_client"), (int)ProxyMode::ProxyClient);
+    m_modeCombo->addItem(tr("代理服务端 (监听端口，接收真实客户端)"), (int)ProxyMode::ProxyServer);
+    m_modeCombo->addItem(tr("代理客户端 (连接真实服务端)"), (int)ProxyMode::ProxyClient);
     m_modeCombo->setCurrentIndex(curIdx);
     m_modeCombo->blockSignals(false);
 
-    // Update host label based on mode
     onProxyModeChanged(m_modeCombo->currentIndex());
 
     // Status box
-    m_statusBox->setTitle(LTR("status_group"));
+    m_statusBox->setTitle(tr("连接状态总览"));
 
     // Status indicators name labels
-    m_zddsStatusInd->setName(LTR("status_zdds"));
-    m_zddsSubInd->setName(LTR("status_zdds_sub"));
-    m_tcpLinkInd->setName(LTR("status_tcp_link"));
-    m_clientsInd->setName(LTR("status_clients"));
-    m_flowTcpZddsInd->setName(LTR("status_flow_tcp_zdds"));
-    m_flowZddsTcpInd->setName(LTR("status_flow_zdds_tcp"));
+    m_zddsStatusInd->setName(tr("ZDDS 状态"));
+    m_zddsSubInd->setName(tr("ZDDS 订阅"));
+    m_tcpLinkInd->setName(tr("TCP 链路"));
+    m_clientsInd->setName(tr("已连接客户端"));
+    m_flowTcpZddsInd->setName(tr("数据流 TCP→ZDDS"));
+    m_flowZddsTcpInd->setName(tr("数据流 ZDDS→TCP"));
 
     // Stats labels
-    m_modeTextLabel->setText(LTR("status_panel_mode") + ":");
-    m_runStatusLabel->setText(LTR("status_panel_run") + ":");
-    m_tcpRxLabel->setText(LTR("label_tcp_rx"));
-    m_tcpTxLabel->setText(LTR("label_tcp_tx"));
-    m_zddsRxLabel->setText(LTR("label_zdds_rx"));
-    m_zddsTxLabel->setText(LTR("label_zdds_tx"));
+    m_modeTextLabel->setText(tr("当前模式") + ":");
+    m_runStatusLabel->setText(tr("运行状态") + ":");
+    m_tcpRxLabel->setText(tr("TCP接收字节:"));
+    m_tcpTxLabel->setText(tr("TCP发送字节:"));
+    m_zddsRxLabel->setText(tr("ZDDS接收字节:"));
+    m_zddsTxLabel->setText(tr("ZDDS发送字节:"));
 
     // Log box
-    m_logBox->setTitle(LTR("log_group"));
+    m_logBox->setTitle(tr("日志"));
 
     // Update start button text
     updateUiEditableState(m_proxyCore->isRunning());
@@ -669,7 +653,7 @@ void MainWindow::retranslateUi()
     // Refresh status panel with translated strings
     onStateChanged();
 
-    // Update language combo display names
+    // Update language combo display names (native names, not translated)
     int langIdx = m_langCombo->currentIndex();
     m_langCombo->blockSignals(true);
     m_langCombo->setItemText(0, LanguageManager::languageDisplayName(LanguageManager::Chinese));

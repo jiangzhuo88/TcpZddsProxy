@@ -1,5 +1,4 @@
 #include "ConfigManager.h"
-#include "LanguageManager.h"
 #include <QCoreApplication>
 #include <QDir>
 #include <QFile>
@@ -46,7 +45,7 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
     QFile file(path);
     if (!file.exists()) {
         // 文件不存在：写入默认值并返回 true（默认配置合法）
-        emit logMessage(LTR("log_cfg_not_found").arg(path));
+        emit logMessage(tr("[配置] 配置文件不存在，将使用默认值: %1").arg(path));
         ProxyConfig def;
         def.mode = ProxyMode::ProxyServer;
         def.tcpHost = "127.0.0.1";
@@ -62,7 +61,7 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
     }
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        emit logMessage(LTR("log_cfg_open_fail").arg(path).arg(file.errorString()));
+        emit logMessage(tr("[配置] 打开失败: %1 (%2)").arg(path).arg(file.errorString()));
         return false;
     }
 
@@ -72,11 +71,11 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
     QJsonParseError err;
     QJsonDocument doc = QJsonDocument::fromJson(data, &err);
     if (err.error != QJsonParseError::NoError) {
-        emit logMessage(LTR("log_cfg_parse_fail").arg(err.errorString()).arg(err.offset));
+        emit logMessage(tr("[配置] JSON解析失败: %1 (offset:%2)").arg(err.errorString()).arg(err.offset));
         return false;
     }
     if (!doc.isObject()) {
-        emit logMessage(LTR("log_cfg_not_object"));
+        emit logMessage(tr("[配置] JSON顶层必须是对象"));
         return false;
     }
     QJsonObject obj = doc.object();
@@ -95,7 +94,7 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
 
     outCfg = cfg;
     m_lastCfg = cfg;
-    emit logMessage(LTR("log_cfg_loaded").arg(path));
+    emit logMessage(tr("[配置] 已加载配置文件: %1").arg(path));
     return true;
 }
 
@@ -119,12 +118,12 @@ bool ConfigManager::saveConfig(const ProxyConfig &cfg)
 
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        emit logMessage(LTR("log_cfg_write_fail").arg(path).arg(file.errorString()));
+        emit logMessage(tr("[配置] 写入失败: %1 (%2)").arg(path).arg(file.errorString()));
         return false;
     }
     file.write(doc.toJson(QJsonDocument::Indented));
     file.close();
     m_lastCfg = cfg;
-    emit logMessage(LTR("log_cfg_saved").arg(path));
+    emit logMessage(tr("[配置] 已保存配置文件: %1").arg(path));
     return true;
 }

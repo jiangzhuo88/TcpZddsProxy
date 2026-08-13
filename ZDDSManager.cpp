@@ -1,5 +1,4 @@
 #include "ZDDSManager.h"
-#include "LanguageManager.h"
 
 ZDDSManager* ZDDSManager::m_instance = nullptr;
 
@@ -47,11 +46,11 @@ void ZDDSManager::initialize()
         if (ok) {
             m_zddsStatus = ZddsStatus::Started;
             emit statusChanged();
-            emit logMessage(LTR("log_zdds_start_ok"));
+            emit logMessage(tr("[ZDDS] 启动成功"));
         } else {
             m_zddsStatus = ZddsStatus::Failed;
             emit statusChanged();
-            emit logMessage(LTR("log_zdds_start_fail"));
+            emit logMessage(tr("[ZDDS] 启动失败"));
         }
     }
 }
@@ -64,7 +63,7 @@ void ZDDSManager::shutdown()
         m_zddsStatus = ZddsStatus::NotStarted;
         m_zddsStarted = false;
         emit statusChanged();
-        emit logMessage(LTR("log_zdds_released"));
+        emit logMessage(tr("[ZDDS] 已释放"));
     }
     m_callbackMap.clear();
 }
@@ -77,7 +76,7 @@ void ZDDSManager::subscribe(const char* domainName, const char* topicName, RecvC
         QMutexLocker locker(&m_callbackMutex);
         m_callbackMap[domainName][topicName].push_back(callback);
     }
-    emit logMessage(LTR("log_zdds_sub").arg(QString::fromUtf8(domainName)).arg(QString::fromUtf8(topicName)));
+    emit logMessage(tr("[ZDDS] 订阅 %1/%2").arg(QString::fromUtf8(domainName)).arg(QString::fromUtf8(topicName)));
 }
 
 void ZDDSManager::unsubscribe(const char* domainName, const char* topicName)
@@ -88,7 +87,7 @@ void ZDDSManager::unsubscribe(const char* domainName, const char* topicName)
         QMutexLocker locker(&m_callbackMutex);
         m_callbackMap[domainName].erase(topicName);
     }
-    emit logMessage(LTR("log_zdds_unsub").arg(QString::fromUtf8(domainName)).arg(QString::fromUtf8(topicName)));
+    emit logMessage(tr("[ZDDS] 取消订阅 %1/%2").arg(QString::fromUtf8(domainName)).arg(QString::fromUtf8(topicName)));
 }
 
 void ZDDSManager::publish(const char* domainName, const char* topicName, const char* data, size_t len)
@@ -139,6 +138,6 @@ void ZDDSManager::staticOnStartSuccess(void* userContext)
         self->m_zddsStatus = ZddsStatus::Started;
         emit self->statusChanged();
         emit self->zddsStarted();
-        emit self->logMessage(LTR("log_zdds_start_notify"));
+        emit self->logMessage(tr("[ZDDS] 启动成功通知回调"));
     }
 }
