@@ -47,7 +47,8 @@ private:
     QSpinBox *m_tcpPortSpin;
 
     // ZDDS配置
-    QLineEdit *m_zddsDomainEdit;
+    QLineEdit *m_zddsSendDomainEdit;
+    QLineEdit *m_zddsRecvDomainEdit;
     QLineEdit *m_zddsSendTopicEdit;
     QLineEdit *m_zddsRecvTopicEdit;
 

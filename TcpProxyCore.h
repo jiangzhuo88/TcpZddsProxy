@@ -23,12 +23,13 @@ struct ProxyConfig {
     int tcpPort = 0;      // ProxyClient模式下：真实服务端端口；ProxyServer模式下：本地监听端口
 
     // ZDDS配置
-    QString zddsDomain;           // ZDDS域名称
+    QString zddsSendDomain;           // ZDDS发送域名称
+    QString zddsRecvDomain;           // ZDDS接收域名称
     QString zddsSendTopic;        // ZDDS发送主题（TCP->ZDDS方向）
     QString zddsRecvTopic;        // ZDDS接收主题（ZDDS->TCP方向）
 
     bool isValid() const {
-        if (zddsDomain.isEmpty() || zddsSendTopic.isEmpty() || zddsRecvTopic.isEmpty())
+        if (zddsSendDomain.isEmpty() || zddsRecvDomain.isEmpty() || zddsSendTopic.isEmpty() || zddsRecvTopic.isEmpty())
             return false;
         if (tcpPort <= 0 || tcpPort > 65535) return false;
         if (mode == ProxyMode::ProxyClient && tcpHost.isEmpty()) return false;

@@ -86,11 +86,12 @@ void MainWindow::setupUi()
     cfgLayout->addWidget(m_tcpPortSpin, row, 1);
     row++;
 
-    // ZDDS域
-    cfgLayout->addWidget(new QLabel("ZDDS域名称:"), row, 0);
-    m_zddsDomainEdit = new QLineEdit(configBox);
-    m_zddsDomainEdit->setPlaceholderText("例如: DomainTCPProxy");
-    cfgLayout->addWidget(m_zddsDomainEdit, row, 1);
+    // SendZDDS域
+    cfgLayout->addWidget(new QLabel("ZDDS发送域名称:"), row, 0);
+    m_zddsSendDomainEdit = new QLineEdit(configBox);
+    m_zddsSendDomainEdit->setPlaceholderText("例如: DomainTCPProxy");
+    cfgLayout->addWidget(m_zddsSendDomainEdit, row, 1);
+
 
     // ZDDS发送主题
     cfgLayout->addWidget(new QLabel("ZDDS发送主题(TCP→ZDDS):"), row, 2);
@@ -98,6 +99,12 @@ void MainWindow::setupUi()
     m_zddsSendTopicEdit->setPlaceholderText("例如: TopicTcpToZdds");
     cfgLayout->addWidget(m_zddsSendTopicEdit, row, 3);
     row++;
+
+    // ZDDS域
+    cfgLayout->addWidget(new QLabel("ZDDS接收域名称:"), row, 0);
+    m_zddsRecvDomainEdit = new QLineEdit(configBox);
+    m_zddsRecvDomainEdit->setPlaceholderText("例如: DomainTCPProxy");
+    cfgLayout->addWidget(m_zddsRecvDomainEdit, row, 1);
 
     // ZDDS接收主题
     cfgLayout->addWidget(new QLabel("ZDDS接收主题(ZDDS→TCP):"), row, 2);
@@ -189,7 +196,8 @@ void MainWindow::loadConfigFromFile()
         cfg.mode = ProxyMode::ProxyServer;
         cfg.tcpHost = "127.0.0.1";
         cfg.tcpPort = 9000;
-        cfg.zddsDomain = "TCPProxyDomain";
+        cfg.zddsSendDomain = "TCPProxySendDomain";
+        cfg.zddsRecvDomain = "TCPProxyRecvDomain";
         cfg.zddsSendTopic = "TcpToZdds";
         cfg.zddsRecvTopic = "ZddsToTcp";
     }
@@ -205,7 +213,8 @@ void MainWindow::applyConfigToUi(const ProxyConfig &cfg)
     }
     m_tcpHostEdit->setText(cfg.tcpHost);
     m_tcpPortSpin->setValue(cfg.tcpPort);
-    m_zddsDomainEdit->setText(cfg.zddsDomain);
+    m_zddsSendDomainEdit->setText(cfg.zddsSendDomain);
+    m_zddsRecvDomainEdit->setText(cfg.zddsRecvDomain);
     m_zddsSendTopicEdit->setText(cfg.zddsSendTopic);
     m_zddsRecvTopicEdit->setText(cfg.zddsRecvTopic);
 }
@@ -253,7 +262,8 @@ ProxyConfig MainWindow::collectConfigFromUi()
     cfg.mode = (ProxyMode)m_modeCombo->currentData().toInt();
     cfg.tcpHost = m_tcpHostEdit->text().trimmed();
     cfg.tcpPort = m_tcpPortSpin->value();
-    cfg.zddsDomain = m_zddsDomainEdit->text().trimmed();
+    cfg.zddsSendDomain = m_zddsSendDomainEdit->text().trimmed();
+    cfg.zddsRecvDomain = m_zddsRecvDomainEdit->text().trimmed();
     cfg.zddsSendTopic = m_zddsSendTopicEdit->text().trimmed();
     cfg.zddsRecvTopic = m_zddsRecvTopicEdit->text().trimmed();
     return cfg;
@@ -265,7 +275,8 @@ void MainWindow::updateUiEditableState(bool running)
     m_tcpHostEdit->setEnabled(!running && (m_modeCombo->currentData().toInt() == (int)ProxyMode::ProxyClient));
     m_tcpHostLabel->setEnabled(!running && (m_modeCombo->currentData().toInt() == (int)ProxyMode::ProxyClient));
     m_tcpPortSpin->setEnabled(!running);
-    m_zddsDomainEdit->setEnabled(!running);
+    m_zddsSendDomainEdit->setEnabled(!running);
+    m_zddsRecvDomainEdit->setEnabled(!running);
     m_zddsSendTopicEdit->setEnabled(!running);
     m_zddsRecvTopicEdit->setEnabled(!running);
 

@@ -93,7 +93,7 @@ void ZDDSManager::publish(const char* domainName, const char* topicName, const Q
 }
 
 void ZDDSManager::staticOnRecvData(const char* domainName, const char* topicName,
-                                    const char* data, size_t len, void* context)
+                                                  const char* data, size_t len, void* context)
 {
     ZDDSManager* self = static_cast<ZDDSManager*>(context);
     if (!self || !data) return;

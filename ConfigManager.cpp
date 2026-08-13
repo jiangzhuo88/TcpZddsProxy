@@ -50,7 +50,8 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
         def.mode = ProxyMode::ProxyServer;
         def.tcpHost = "127.0.0.1";
         def.tcpPort = 9000;
-        def.zddsDomain = "TCPProxyDomain";
+        def.zddsSendDomain = "TCPProxySendDomain";
+        def.zddsRecvDomain = "TCPProxyRecvDomain";
         def.zddsSendTopic = "TcpToZdds";
         def.zddsRecvTopic = "ZddsToTcp";
         outCfg = def;
@@ -83,7 +84,8 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
     cfg.mode = intToProxyMode(obj.value("mode").toInt(0));
     cfg.tcpHost = obj.value("tcpHost").toString("127.0.0.1").trimmed();
     cfg.tcpPort = obj.value("tcpPort").toInt(9000);
-    cfg.zddsDomain = obj.value("zddsDomain").toString("TCPProxyDomain").trimmed();
+    cfg.zddsSendDomain = obj.value("zddsSendDomain").toString("TCPProxySendDomain").trimmed();
+    cfg.zddsRecvDomain = obj.value("zddsRecvDomain").toString("TCPProxyRecvDomain").trimmed();
     cfg.zddsSendTopic = obj.value("zddsSendTopic").toString("TcpToZdds").trimmed();
     cfg.zddsRecvTopic = obj.value("zddsRecvTopic").toString("ZddsToTcp").trimmed();
 
@@ -102,7 +104,8 @@ bool ConfigManager::saveConfig(const ProxyConfig &cfg)
     obj.insert("mode", (int)cfg.mode);
     obj.insert("tcpHost", cfg.tcpHost);
     obj.insert("tcpPort", cfg.tcpPort);
-    obj.insert("zddsDomain", cfg.zddsDomain);
+    obj.insert("zddsSendDomain", cfg.zddsSendDomain);
+    obj.insert("zddsRecvDomain", cfg.zddsRecvDomain);
     obj.insert("zddsSendTopic", cfg.zddsSendTopic);
     obj.insert("zddsRecvTopic", cfg.zddsRecvTopic);
 

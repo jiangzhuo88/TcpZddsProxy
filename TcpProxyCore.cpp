@@ -72,7 +72,7 @@ bool TcpProxyCore::start()
             forwardZddsToTcp(data, len);
         };
         ZDDSManager::getInstance()->subscribe(
-            m_cfg.zddsDomain.toUtf8().constData(),
+            m_cfg.zddsRecvDomain.toUtf8().constData(),
             m_cfg.zddsRecvTopic.toUtf8().constData(),
             recvCb);
         m_zddsSubscribed = true;
@@ -91,8 +91,8 @@ bool TcpProxyCore::start()
             return false;
         }
         emit logMessage(QString("[代理服务端] 已启动，监听端口 %1").arg(m_cfg.tcpPort));
-        emit logMessage(QString("[配置] TCP->ZDDS: %1/%2, ZDDS->TCP: %1/%3")
-                            .arg(m_cfg.zddsDomain).arg(m_cfg.zddsSendTopic).arg(m_cfg.zddsRecvTopic));
+        emit logMessage(QString("[配置] TCP->ZDDS: %1/%3, ZDDS->TCP: %2/%4")
+                            .arg(m_cfg.zddsSendDomain).arg(m_cfg.zddsRecvDomain).arg(m_cfg.zddsSendTopic).arg(m_cfg.zddsRecvTopic));
         ok = true;
     } else {
         // === 代理客户端：连接真实服务端 ===
@@ -108,8 +108,8 @@ bool TcpProxyCore::start()
         m_serverSocket->connectToHost(m_cfg.tcpHost, m_cfg.tcpPort);
         // 标记为运行中（连接中），由 connected/error 信号维护具体状态
         ok = true;
-        emit logMessage(QString("[配置] TCP->ZDDS: %1/%2, ZDDS->TCP: %1/%3")
-                            .arg(m_cfg.zddsDomain).arg(m_cfg.zddsSendTopic).arg(m_cfg.zddsRecvTopic));
+        emit logMessage(QString("[配置] TCP->ZDDS: %1/%3, ZDDS->TCP: %2/%4")
+                            .arg(m_cfg.zddsSendDomain).arg(m_cfg.zddsRecvDomain).arg(m_cfg.zddsSendTopic).arg(m_cfg.zddsRecvTopic));
     }
 
     m_running = ok;
@@ -124,7 +124,7 @@ void TcpProxyCore::stop()
     // 取消订阅ZDDS
     if (m_zddsSubscribed) {
         ZDDSManager::getInstance()->unsubscribe(
-            m_cfg.zddsDomain.toUtf8().constData(),
+            m_cfg.zddsRecvDomain.toUtf8().constData(),
             m_cfg.zddsRecvTopic.toUtf8().constData());
         m_zddsSubscribed = false;
     }
@@ -257,12 +257,12 @@ void TcpProxyCore::forwardTcpToZdds(const QByteArray &data, const QString &peerI
 {
     if (data.isEmpty()) return;
     ZDDSManager::getInstance()->publish(
-        m_cfg.zddsDomain.toUtf8().constData(),
+        m_cfg.zddsSendDomain.toUtf8().constData(),
         m_cfg.zddsSendTopic.toUtf8().constData(),
         data);
     m_zddsTxBytes += data.size();
     emit logMessage(QString("[ZDDS发->] %1/%2 发送 %3字节 (来源:%4)")
-                        .arg(m_cfg.zddsDomain).arg(m_cfg.zddsSendTopic)
+                        .arg(m_cfg.zddsSendDomain).arg(m_cfg.zddsSendTopic)
                         .arg(data.size()).arg(peerInfo));
     emit stateChanged();
 }
@@ -284,7 +284,7 @@ void TcpProxyCore::doForwardZddsToTcp(const QByteArray &bytes)
     size_t len = (size_t)bytes.size();
     m_zddsRxBytes += len;
     emit logMessage(QString("[ZDDS收<-] %1/%2 收到 %3字节: %4")
-                        .arg(m_cfg.zddsDomain).arg(m_cfg.zddsRecvTopic)
+                        .arg(m_cfg.zddsRecvDomain).arg(m_cfg.zddsRecvTopic)
                         .arg(len).arg(toHex(bytes)));
 
     if (m_cfg.mode == ProxyMode::ProxyServer) {

@@ -48,7 +48,7 @@ private:
 
     // 静态回调转发
     static void staticOnRecvData(const char* domainName, const char* topicName,
-                                 const char* data, size_t len, void* context);
+                                               const char* data, size_t len, void* context);
     static void staticOnStartSuccess(void* userContext);
 };
 
