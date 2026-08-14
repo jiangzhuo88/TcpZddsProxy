@@ -130,6 +130,9 @@ void TcpProxyCore::stop()
 {
     if (!m_running && !m_tcpServer && !m_serverSocket) return;
 
+    // 先标记为已停止，防止 close() 触发的 disconnected 信号中启动自动重连
+    m_running = false;
+
     // 停止重连定时器
     if (m_reconnectTimer) {
         m_reconnectTimer->stop();
@@ -167,7 +170,6 @@ void TcpProxyCore::stop()
         emit logMessage("[代理客户端] 已停止");
     }
 
-    m_running = false;
     emit stateChanged();
 }
 
