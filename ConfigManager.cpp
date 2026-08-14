@@ -54,6 +54,8 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
         def.zddsRecvDomain = "TCPProxyRecvDomain";
         def.zddsSendTopic = "TcpToZdds";
         def.zddsRecvTopic = "ZddsToTcp";
+        def.autoReconnect = false;
+        def.reconnectInterval = 5;
         outCfg = def;
         m_lastCfg = def;
         saveConfig(def);
@@ -88,6 +90,9 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
     cfg.zddsRecvDomain = obj.value("zddsRecvDomain").toString("TCPProxyRecvDomain").trimmed();
     cfg.zddsSendTopic = obj.value("zddsSendTopic").toString("TcpToZdds").trimmed();
     cfg.zddsRecvTopic = obj.value("zddsRecvTopic").toString("ZddsToTcp").trimmed();
+    cfg.autoReconnect = obj.value("autoReconnect").toBool(false);
+    cfg.reconnectInterval = obj.value("reconnectInterval").toInt(5);
+    if (cfg.reconnectInterval < 1) cfg.reconnectInterval = 5;
 
     // 修正端口
     if (cfg.tcpPort <= 0 || cfg.tcpPort > 65535) cfg.tcpPort = 9000;
@@ -108,6 +113,8 @@ bool ConfigManager::saveConfig(const ProxyConfig &cfg)
     obj.insert("zddsRecvDomain", cfg.zddsRecvDomain);
     obj.insert("zddsSendTopic", cfg.zddsSendTopic);
     obj.insert("zddsRecvTopic", cfg.zddsRecvTopic);
+    obj.insert("autoReconnect", cfg.autoReconnect);
+    obj.insert("reconnectInterval", cfg.reconnectInterval);
 
     QJsonDocument doc(obj);
     QString path = defaultConfigFilePath();

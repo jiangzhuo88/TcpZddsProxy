@@ -6,6 +6,7 @@
 #include <QTcpSocket>
 #include <QVector>
 #include <QByteArray>
+#include <QTimer>
 
 class ZDDSManager;
 
@@ -27,6 +28,10 @@ struct ProxyConfig {
     QString zddsRecvDomain;           // ZDDS接收域名称
     QString zddsSendTopic;        // ZDDS发送主题（TCP->ZDDS方向）
     QString zddsRecvTopic;        // ZDDS接收主题（ZDDS->TCP方向）
+
+    // 自动重连配置（仅代理客户端模式有效）
+    bool autoReconnect = false;       // 是否启用自动重连
+    int reconnectInterval = 5;        // 重连间隔（秒）
 
     bool isValid() const {
         if (zddsSendDomain.isEmpty() || zddsRecvDomain.isEmpty() || zddsSendTopic.isEmpty() || zddsRecvTopic.isEmpty())
@@ -51,6 +56,7 @@ public:
     void stop();
     bool isRunning() const;
     bool isConnected() const;  // TCP实际连接是否建立（代理客户端模式有意义）
+    bool isReconnecting() const;  // 代理客户端模式：是否在自动重连等待中
     ProxyMode currentMode() const { return m_cfg.mode; }
 
     // 统计
@@ -75,6 +81,7 @@ private slots:
     void onServerSocketDisconnected();
     void onServerSocketReadyRead();
     void onServerSocketError(QAbstractSocket::SocketError err);
+    void onReconnectTimer();
 
     // 在主线程中实际执行 ZDDS->TCP 转发（由ZDDS回调线程通过invokeMethod触发）
     void doForwardZddsToTcp(const QByteArray &bytes);
@@ -90,6 +97,7 @@ private:
     // === ProxyClient模式 ===
     QTcpSocket *m_serverSocket = nullptr;   // 连接真实服务端的socket
     bool m_serverSocketConnected = false;   // 真实服务端是否已连接成功
+    QTimer *m_reconnectTimer = nullptr;     // 自动重连定时器
 
     // 统计
     quint64 m_tcpRxBytes = 0;

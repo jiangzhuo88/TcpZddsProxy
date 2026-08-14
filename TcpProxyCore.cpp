@@ -7,6 +7,9 @@ TcpProxyCore::TcpProxyCore(QObject *parent)
     , m_tcpServer(nullptr)
     , m_serverSocket(nullptr)
 {
+    m_reconnectTimer = new QTimer(this);
+    m_reconnectTimer->setSingleShot(true);
+    connect(m_reconnectTimer, &QTimer::timeout, this, &TcpProxyCore::onReconnectTimer);
 }
 
 TcpProxyCore::~TcpProxyCore()
@@ -50,6 +53,12 @@ bool TcpProxyCore::isConnected() const
     if (m_cfg.mode == ProxyMode::ProxyServer)
         return m_running;  // 服务端模式：监听即算连接
     return m_running && m_serverSocketConnected;  // 客户端模式：需TCP已连接
+}
+
+bool TcpProxyCore::isReconnecting() const
+{
+    return m_running && m_cfg.mode == ProxyMode::ProxyClient
+           && !m_serverSocketConnected && m_reconnectTimer && m_reconnectTimer->isActive();
 }
 
 bool TcpProxyCore::start()
@@ -121,6 +130,11 @@ void TcpProxyCore::stop()
 {
     if (!m_running && !m_tcpServer && !m_serverSocket) return;
 
+    // 停止重连定时器
+    if (m_reconnectTimer) {
+        m_reconnectTimer->stop();
+    }
+
     // 取消订阅ZDDS
     if (m_zddsSubscribed) {
         ZDDSManager::getInstance()->unsubscribe(
@@ -155,6 +169,30 @@ void TcpProxyCore::stop()
 
     m_running = false;
     emit stateChanged();
+}
+
+void TcpProxyCore::onReconnectTimer()
+{
+    if (!m_running || m_cfg.mode != ProxyMode::ProxyClient) return;
+    if (m_serverSocketConnected) return;  // 已连接则不需要重连
+
+    emit logMessage(QString("[代理客户端] 正在尝试重连 %1:%2 ...").arg(m_cfg.tcpHost).arg(m_cfg.tcpPort));
+
+    // 清理旧socket
+    if (m_serverSocket) {
+        m_serverSocket->close();
+        m_serverSocket->deleteLater();
+        m_serverSocket = nullptr;
+    }
+
+    // 创建新socket并连接
+    m_serverSocket = new QTcpSocket(this);
+    connect(m_serverSocket, &QTcpSocket::connected, this, &TcpProxyCore::onServerSocketConnected);
+    connect(m_serverSocket, &QTcpSocket::disconnected, this, &TcpProxyCore::onServerSocketDisconnected);
+    connect(m_serverSocket, &QTcpSocket::readyRead, this, &TcpProxyCore::onServerSocketReadyRead);
+    connect(m_serverSocket, QOverload<QAbstractSocket::SocketError>::of(&QAbstractSocket::error),
+            this, &TcpProxyCore::onServerSocketError);
+    m_serverSocket->connectToHost(m_cfg.tcpHost, m_cfg.tcpPort);
 }
 
 // ============================================================
@@ -222,8 +260,13 @@ void TcpProxyCore::onServerSocketDisconnected()
 {
     m_serverSocketConnected = false;
     emit logMessage(QString("[代理客户端] 与真实服务端断开连接"));
-    // 不改 m_running，仍允许重连或重新启动；但状态标签反映实际连接状态
     emit stateChanged();
+
+    // 自动重连
+    if (m_running && m_cfg.autoReconnect && m_cfg.mode == ProxyMode::ProxyClient) {
+        emit logMessage(QString("[代理客户端] 将在 %1 秒后尝试自动重连...").arg(m_cfg.reconnectInterval));
+        m_reconnectTimer->start(m_cfg.reconnectInterval * 1000);
+    }
 }
 
 void TcpProxyCore::onServerSocketReadyRead()
@@ -241,10 +284,19 @@ void TcpProxyCore::onServerSocketError(QAbstractSocket::SocketError err)
 {
     if (!m_serverSocket) return;
     emit logMessage(QString("[错误] 服务端连接错误: %1").arg(m_serverSocket->errorString()));
-    // 连接失败时修正状态
+
     if (!m_serverSocketConnected) {
-        m_running = false;
-        emit logMessage(QString("[代理客户端] 连接真实服务端失败，代理已停止"));
+        // 连接失败
+        if (m_running && m_cfg.autoReconnect && m_cfg.mode == ProxyMode::ProxyClient) {
+            // 自动重连：不停止代理，等待定时器重连
+            emit logMessage(QString("[代理客户端] 连接失败，将在 %1 秒后重连...").arg(m_cfg.reconnectInterval));
+            if (!m_reconnectTimer->isActive()) {
+                m_reconnectTimer->start(m_cfg.reconnectInterval * 1000);
+            }
+        } else {
+            m_running = false;
+            emit logMessage(QString("[代理客户端] 连接真实服务端失败，代理已停止"));
+        }
         emit stateChanged();
     }
     Q_UNUSED(err);

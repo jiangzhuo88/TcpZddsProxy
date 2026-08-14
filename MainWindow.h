@@ -6,6 +6,7 @@
 #include <QComboBox>
 #include <QLineEdit>
 #include <QSpinBox>
+#include <QCheckBox>
 #include <QPushButton>
 #include <QLabel>
 #include <QGroupBox>
@@ -51,6 +52,10 @@ private:
     QLineEdit *m_zddsRecvDomainEdit;
     QLineEdit *m_zddsSendTopicEdit;
     QLineEdit *m_zddsRecvTopicEdit;
+
+    // 自动重连配置
+    QCheckBox *m_autoReconnectCheck;
+    QSpinBox *m_reconnectIntervalSpin;
 
     // 控制按钮
     QPushButton *m_startBtn;

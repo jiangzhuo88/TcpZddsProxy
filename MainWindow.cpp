@@ -113,6 +113,17 @@ void MainWindow::setupUi()
     cfgLayout->addWidget(m_zddsRecvTopicEdit, row, 3);
     row++;
 
+    // 自动重连配置（仅代理客户端模式有效）
+    m_autoReconnectCheck = new QCheckBox("自动重连", configBox);
+    cfgLayout->addWidget(m_autoReconnectCheck, row, 0);
+    cfgLayout->addWidget(new QLabel("重连间隔(秒):"), row, 2);
+    m_reconnectIntervalSpin = new QSpinBox(configBox);
+    m_reconnectIntervalSpin->setRange(1, 300);
+    m_reconnectIntervalSpin->setValue(5);
+    cfgLayout->addWidget(m_reconnectIntervalSpin, row, 3);
+    connect(m_autoReconnectCheck, &QCheckBox::toggled, m_reconnectIntervalSpin, &QSpinBox::setEnabled);
+    row++;
+
     // 控制按钮
     QHBoxLayout *btnLayout = new QHBoxLayout();
     QPushButton *saveBtn = new QPushButton("保存配置", configBox);
@@ -200,6 +211,8 @@ void MainWindow::loadConfigFromFile()
         cfg.zddsRecvDomain = "TCPProxyRecvDomain";
         cfg.zddsSendTopic = "TcpToZdds";
         cfg.zddsRecvTopic = "ZddsToTcp";
+        cfg.autoReconnect = false;
+        cfg.reconnectInterval = 5;
     }
     applyConfigToUi(cfg);
 }
@@ -217,6 +230,8 @@ void MainWindow::applyConfigToUi(const ProxyConfig &cfg)
     m_zddsRecvDomainEdit->setText(cfg.zddsRecvDomain);
     m_zddsSendTopicEdit->setText(cfg.zddsSendTopic);
     m_zddsRecvTopicEdit->setText(cfg.zddsRecvTopic);
+    m_autoReconnectCheck->setChecked(cfg.autoReconnect);
+    m_reconnectIntervalSpin->setValue(cfg.reconnectInterval);
 }
 
 void MainWindow::onSaveConfig()
@@ -249,6 +264,8 @@ void MainWindow::onProxyModeChanged(int index)
     bool isClientMode = (mode == ProxyMode::ProxyClient);
     m_tcpHostLabel->setEnabled(isClientMode);
     m_tcpHostEdit->setEnabled(isClientMode);
+    m_autoReconnectCheck->setEnabled(isClientMode);
+    m_reconnectIntervalSpin->setEnabled(isClientMode && m_autoReconnectCheck->isChecked());
     if (isClientMode) {
         m_tcpHostLabel->setText("真实服务端地址:");
     } else {
@@ -266,19 +283,24 @@ ProxyConfig MainWindow::collectConfigFromUi()
     cfg.zddsRecvDomain = m_zddsRecvDomainEdit->text().trimmed();
     cfg.zddsSendTopic = m_zddsSendTopicEdit->text().trimmed();
     cfg.zddsRecvTopic = m_zddsRecvTopicEdit->text().trimmed();
+    cfg.autoReconnect = m_autoReconnectCheck->isChecked();
+    cfg.reconnectInterval = m_reconnectIntervalSpin->value();
     return cfg;
 }
 
 void MainWindow::updateUiEditableState(bool running)
 {
+    bool isClientMode = (m_modeCombo->currentData().toInt() == (int)ProxyMode::ProxyClient);
     m_modeCombo->setEnabled(!running);
-    m_tcpHostEdit->setEnabled(!running && (m_modeCombo->currentData().toInt() == (int)ProxyMode::ProxyClient));
-    m_tcpHostLabel->setEnabled(!running && (m_modeCombo->currentData().toInt() == (int)ProxyMode::ProxyClient));
+    m_tcpHostEdit->setEnabled(!running && isClientMode);
+    m_tcpHostLabel->setEnabled(!running && isClientMode);
     m_tcpPortSpin->setEnabled(!running);
     m_zddsSendDomainEdit->setEnabled(!running);
     m_zddsRecvDomainEdit->setEnabled(!running);
     m_zddsSendTopicEdit->setEnabled(!running);
     m_zddsRecvTopicEdit->setEnabled(!running);
+    m_autoReconnectCheck->setEnabled(!running && isClientMode);
+    m_reconnectIntervalSpin->setEnabled(!running && isClientMode && m_autoReconnectCheck->isChecked());
 
     if (running) {
         m_startBtn->setText("停止代理");
@@ -332,6 +354,10 @@ void MainWindow::onStateChanged()
     } else if (connected) {
         m_statusValueLabel->setText("运行中");
         m_statusValueLabel->setStyleSheet("font-weight:bold;color:#27ae60;");
+    } else if (m_proxyCore->isReconnecting()) {
+        // 代理客户端模式：正在自动重连
+        m_statusValueLabel->setText("重连中...");
+        m_statusValueLabel->setStyleSheet("font-weight:bold;color:#f39c12;");
     } else {
         // 代理客户端模式：已启动但TCP尚未连接
         m_statusValueLabel->setText("连接中...");
