@@ -37,20 +37,14 @@ void ZDDSManager::initialize()
         m_zddsInterface = getInterfaceInstance();
     }
     if (!m_zddsStarted) {
-        m_zddsStatus = ZddsStatus::Starting;
-        emit statusChanged();
         m_zddsInterface->regRecvCallbackFunc(staticOnRecvData, this);
         m_zddsInterface->regZDDSStartSuccessNotify(staticOnStartSuccess, this);
         bool ok = m_zddsInterface->startZDDS();
         m_zddsStarted = true;
         if (ok) {
-            m_zddsStatus = ZddsStatus::Started;
-            emit statusChanged();
-            emit logMessage(tr("[ZDDS] 启动成功"));
+            emit logMessage(QString("[ZDDS] 启动成功"));
         } else {
-            m_zddsStatus = ZddsStatus::Failed;
-            emit statusChanged();
-            emit logMessage(tr("[ZDDS] 启动失败"));
+            emit logMessage(QString("[ZDDS] 启动失败"));
         }
     }
 }
@@ -60,10 +54,7 @@ void ZDDSManager::shutdown()
     if (m_zddsInterface) {
         ZDDSInterface::releaseZDDSInterface(m_zddsInterface);
         m_zddsInterface = nullptr;
-        m_zddsStatus = ZddsStatus::NotStarted;
-        m_zddsStarted = false;
-        emit statusChanged();
-        emit logMessage(tr("[ZDDS] 已释放"));
+        emit logMessage(QString("[ZDDS] 已释放"));
     }
     m_callbackMap.clear();
 }
@@ -76,7 +67,7 @@ void ZDDSManager::subscribe(const char* domainName, const char* topicName, RecvC
         QMutexLocker locker(&m_callbackMutex);
         m_callbackMap[domainName][topicName].push_back(callback);
     }
-    emit logMessage(tr("[ZDDS] 订阅 %1/%2").arg(QString::fromUtf8(domainName)).arg(QString::fromUtf8(topicName)));
+    emit logMessage(QString("[ZDDS] 订阅 %1/%2").arg(domainName).arg(topicName));
 }
 
 void ZDDSManager::unsubscribe(const char* domainName, const char* topicName)
@@ -87,7 +78,7 @@ void ZDDSManager::unsubscribe(const char* domainName, const char* topicName)
         QMutexLocker locker(&m_callbackMutex);
         m_callbackMap[domainName].erase(topicName);
     }
-    emit logMessage(tr("[ZDDS] 取消订阅 %1/%2").arg(QString::fromUtf8(domainName)).arg(QString::fromUtf8(topicName)));
+    emit logMessage(QString("[ZDDS] 取消订阅 %1/%2").arg(domainName).arg(topicName));
 }
 
 void ZDDSManager::publish(const char* domainName, const char* topicName, const char* data, size_t len)
@@ -99,16 +90,6 @@ void ZDDSManager::publish(const char* domainName, const char* topicName, const c
 void ZDDSManager::publish(const char* domainName, const char* topicName, const QByteArray &data)
 {
     publish(domainName, topicName, data.constData(), (size_t)data.size());
-}
-
-int ZDDSManager::subscribedCount() const
-{
-    QMutexLocker locker(&const_cast<ZDDSManager*>(this)->m_callbackMutex);
-    int count = 0;
-    for (auto &domain : m_callbackMap) {
-        count += (int)domain.second.size();
-    }
-    return count;
 }
 
 void ZDDSManager::staticOnRecvData(const char* domainName, const char* topicName,
@@ -135,9 +116,7 @@ void ZDDSManager::staticOnStartSuccess(void* userContext)
 {
     ZDDSManager* self = static_cast<ZDDSManager*>(userContext);
     if (self) {
-        self->m_zddsStatus = ZddsStatus::Started;
-        emit self->statusChanged();
         emit self->zddsStarted();
-        emit self->logMessage(tr("[ZDDS] 启动成功通知回调"));
+        emit self->logMessage(QString("[ZDDS] 启动成功通知回调"));
     }
 }
