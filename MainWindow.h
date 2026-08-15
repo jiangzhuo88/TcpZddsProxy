@@ -87,6 +87,7 @@ private:
 
     // 自动重连配置
     QCheckBox *m_autoReconnectCheck;
+    QLabel *m_reconnectIntervalLabel;
     QSpinBox *m_reconnectIntervalSpin;
 
     // TCP配置

@@ -185,7 +185,8 @@ void MainWindow::setupUi()
     // 自动重连配置（仅代理客户端模式有效）
     m_autoReconnectCheck = new QCheckBox(tr("自动重连"), m_configBox);
     cfgLayout->addWidget(m_autoReconnectCheck, row, 0);
-    cfgLayout->addWidget(new QLabel(tr("重连间隔(秒):")), row, 2);
+    m_reconnectIntervalLabel = new QLabel(tr("重连间隔(秒):"), m_configBox);
+    cfgLayout->addWidget(m_reconnectIntervalLabel, row, 2);
     m_reconnectIntervalSpin = new QSpinBox(m_configBox);
     m_reconnectIntervalSpin->setRange(1, 300);
     m_reconnectIntervalSpin->setValue(5);
@@ -646,6 +647,8 @@ void MainWindow::retranslateUi()
     m_zddsRecvTopicEdit->setPlaceholderText(tr("例如: TopicZddsToTcp"));
     m_saveBtn->setText(tr("保存配置"));
     m_clearLogBtn->setText(tr("清空日志"));
+    m_autoReconnectCheck->setText(tr("自动重连"));
+    m_reconnectIntervalLabel->setText(tr("重连间隔(秒):"));
 
     // Mode combo items
     int curIdx = m_modeCombo->currentIndex();
