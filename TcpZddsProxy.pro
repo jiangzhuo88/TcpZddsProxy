@@ -19,15 +19,27 @@ LIBS += -L$$PWD/src/ZDDS/lib -lzmq
 
 system(cp -r "$$PWD/src/ZDDS/lib/lib*.so*" "$$DESTDIR")
 
+# Qt Linguist 翻译文件
+TRANSLATIONS += translations/tcpzddsproxy_en.ts
+
+# 嵌入翻译资源（.qm 编译后文件）
+RESOURCES += translations.qrc
+
 SOURCES += \
     main.cpp \
     ZDDSManager.cpp \
     TcpProxyCore.cpp \
     ConfigManager.cpp \
+    LanguageManager.cpp \
     MainWindow.cpp
 
 HEADERS += \
     ZDDSManager.h \
     TcpProxyCore.h \
     ConfigManager.h \
+    LanguageManager.h \
     MainWindow.h
+
+# 翻译源文件
+DISTFILES += \
+    translations/tcpzddsproxy_en.ts

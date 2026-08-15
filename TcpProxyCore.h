@@ -6,8 +6,8 @@
 #include <QTcpSocket>
 #include <QVector>
 #include <QByteArray>
+#include <QDateTime>
 #include <QTimer>
-
 class ZDDSManager;
 
 enum class ProxyMode {
@@ -15,13 +15,23 @@ enum class ProxyMode {
     ProxyClient = 1    // 代理客户端：连接真实服务端，通过ZDDS转发
 };
 
+// TCP链路状态
+enum class TcpLinkStatus {
+    Stopped       = 0,   // 未启动
+    Listening     = 1,   // 服务端模式：正在监听
+    Connecting    = 2,   // 客户端模式：正在连接
+    Connected     = 3,   // 已连接
+    Disconnected  = 4,   // 已断开
+    Error         = 5    // 错误
+};
+
 // 配置结构
 struct ProxyConfig {
     ProxyMode mode = ProxyMode::ProxyServer;
 
     // TCP配置
-    QString tcpHost;      // ProxyClient模式下：真实服务端地址；ProxyServer模式下忽略（监听Any）
-    int tcpPort = 0;      // ProxyClient模式下：真实服务端端口；ProxyServer模式下：本地监听端口
+    QString tcpHost;      // ProxyClient模式：真实服务端地址；ProxyServer模式：监听绑定地址（空=0.0.0.0所有地址）
+    int tcpPort = 0;      // ProxyClient模式：真实服务端端口；ProxyServer模式：本地监听端口
 
     // ZDDS配置
     QString zddsSendDomain;           // ZDDS发送域名称
@@ -32,6 +42,9 @@ struct ProxyConfig {
     // 自动重连配置（仅代理客户端模式有效）
     bool autoReconnect = false;       // 是否启用自动重连
     int reconnectInterval = 5;        // 重连间隔（秒）
+
+    // 语言设置（0=中文, 1=英文）
+    int language = 0;
 
     bool isValid() const {
         if (zddsSendDomain.isEmpty() || zddsRecvDomain.isEmpty() || zddsSendTopic.isEmpty() || zddsRecvTopic.isEmpty())
@@ -59,6 +72,16 @@ public:
     bool isReconnecting() const;  // 代理客户端模式：是否在自动重连等待中
     ProxyMode currentMode() const { return m_cfg.mode; }
 
+    // === 状态查询 ===
+    TcpLinkStatus tcpLinkStatus() const;
+    bool isZddsSubscribed() const { return m_zddsSubscribed; }
+    int clientCount() const { return m_clientSockets.size(); }
+    QString tcpPeerInfo() const;   // 当前TCP连接的对端信息
+
+    // 数据流活跃状态（最近5秒内有数据则为活跃）
+    bool isTcpToZddsActive() const;
+    bool isZddsToTcpActive() const;
+
     // 统计
     quint64 tcpRxBytes() const { return m_tcpRxBytes; }
     quint64 tcpTxBytes() const { return m_tcpTxBytes; }
@@ -68,7 +91,7 @@ public:
 signals:
     void logMessage(const QString &msg);
     void stateChanged();
-
+    void sigReconnect();
 private slots:
     // === ProxyServer模式相关 ===
     void onNewClientConnection();
@@ -89,6 +112,7 @@ private slots:
 private:
     ProxyConfig m_cfg;
     bool m_running = false;
+    TcpLinkStatus m_tcpStatus = TcpLinkStatus::Stopped;
 
     // === ProxyServer模式 ===
     QTcpServer *m_tcpServer = nullptr;
@@ -104,6 +128,10 @@ private:
     quint64 m_tcpTxBytes = 0;
     quint64 m_zddsRxBytes = 0;
     quint64 m_zddsTxBytes = 0;
+
+    // 数据流活跃时间戳
+    QDateTime m_lastTcpToZddsTime;
+    QDateTime m_lastZddsToTcpTime;
 
     // ZDDS回调注册ID
     bool m_zddsSubscribed = false;

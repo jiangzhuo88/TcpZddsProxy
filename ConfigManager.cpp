@@ -45,7 +45,7 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
     QFile file(path);
     if (!file.exists()) {
         // 文件不存在：写入默认值并返回 true（默认配置合法）
-        emit logMessage(QString("[配置] 配置文件不存在，将使用默认值: %1").arg(path));
+        emit logMessage(tr("[配置] 配置文件不存在，将使用默认值: %1").arg(path));
         ProxyConfig def;
         def.mode = ProxyMode::ProxyServer;
         def.tcpHost = "127.0.0.1";
@@ -56,6 +56,7 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
         def.zddsRecvTopic = "ZddsToTcp";
         def.autoReconnect = false;
         def.reconnectInterval = 5;
+        def.language = 1;  // 默认中文
         outCfg = def;
         m_lastCfg = def;
         saveConfig(def);
@@ -63,7 +64,7 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
     }
 
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        emit logMessage(QString("[配置] 打开失败: %1 (%2)").arg(path).arg(file.errorString()));
+        emit logMessage(tr("[配置] 打开失败: %1 (%2)").arg(path).arg(file.errorString()));
         return false;
     }
 
@@ -73,11 +74,11 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
     QJsonParseError err;
     QJsonDocument doc = QJsonDocument::fromJson(data, &err);
     if (err.error != QJsonParseError::NoError) {
-        emit logMessage(QString("[配置] JSON解析失败: %1 (offset:%2)").arg(err.errorString()).arg(err.offset));
+        emit logMessage(tr("[配置] JSON解析失败: %1 (offset:%2)").arg(err.errorString()).arg(err.offset));
         return false;
     }
     if (!doc.isObject()) {
-        emit logMessage("[配置] JSON顶层必须是对象");
+        emit logMessage(tr("[配置] JSON顶层必须是对象"));
         return false;
     }
     QJsonObject obj = doc.object();
@@ -90,6 +91,7 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
     cfg.zddsRecvDomain = obj.value("zddsRecvDomain").toString("TCPProxyRecvDomain").trimmed();
     cfg.zddsSendTopic = obj.value("zddsSendTopic").toString("TcpToZdds").trimmed();
     cfg.zddsRecvTopic = obj.value("zddsRecvTopic").toString("ZddsToTcp").trimmed();
+    cfg.language = obj.value("language").toInt(1);  // 默认中文
     cfg.autoReconnect = obj.value("autoReconnect").toBool(false);
     cfg.reconnectInterval = obj.value("reconnectInterval").toInt(5);
     if (cfg.reconnectInterval < 1) cfg.reconnectInterval = 5;
@@ -99,7 +101,7 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
 
     outCfg = cfg;
     m_lastCfg = cfg;
-    emit logMessage(QString("[配置] 已加载配置文件: %1").arg(path));
+    emit logMessage(tr("[配置] 已加载配置文件: %1").arg(path));
     return true;
 }
 
@@ -115,6 +117,7 @@ bool ConfigManager::saveConfig(const ProxyConfig &cfg)
     obj.insert("zddsRecvTopic", cfg.zddsRecvTopic);
     obj.insert("autoReconnect", cfg.autoReconnect);
     obj.insert("reconnectInterval", cfg.reconnectInterval);
+    obj.insert("language", cfg.language);
 
     QJsonDocument doc(obj);
     QString path = defaultConfigFilePath();
@@ -125,12 +128,12 @@ bool ConfigManager::saveConfig(const ProxyConfig &cfg)
 
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        emit logMessage(QString("[配置] 写入失败: %1 (%2)").arg(path).arg(file.errorString()));
+        emit logMessage(tr("[配置] 写入失败: %1 (%2)").arg(path).arg(file.errorString()));
         return false;
     }
     file.write(doc.toJson(QJsonDocument::Indented));
     file.close();
     m_lastCfg = cfg;
-    emit logMessage(QString("[配置] 已保存配置文件: %1").arg(path));
+    emit logMessage(tr("[配置] 已保存配置文件: %1").arg(path));
     return true;
 }
