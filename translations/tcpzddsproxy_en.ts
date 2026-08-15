@@ -132,8 +132,14 @@
         <translation>Running</translation>
     </message>
     <message>
+        <location filename="../MainWindow.cpp" line="474"/>
         <source>连接中...</source>
-        <translation type="vanished">Connecting...</translation>
+        <translation>Connecting...</translation>
+    </message>
+    <message>
+        <location filename="../MainWindow.cpp" line="470"/>
+        <source>重连中...</source>
+        <translation>Reconnecting...</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="494"/>

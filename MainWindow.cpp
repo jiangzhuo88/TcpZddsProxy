@@ -467,11 +467,11 @@ void MainWindow::onStateChanged()
         m_statusValueLabel->setStyleSheet("font-weight:bold;color:#27ae60;");
     } else if (m_proxyCore->isReconnecting()) {
         // 代理客户端模式：正在自动重连
-        m_statusValueLabel->setText("重连中...");
+        m_statusValueLabel->setText(tr("重连中..."));
         m_statusValueLabel->setStyleSheet("font-weight:bold;color:#f39c12;");
     } else {
         // 代理客户端模式：已启动但TCP尚未连接
-        m_statusValueLabel->setText("连接中...");
+        m_statusValueLabel->setText(tr("连接中..."));
         m_statusValueLabel->setStyleSheet("font-weight:bold;color:#f39c12;");
     }
 
