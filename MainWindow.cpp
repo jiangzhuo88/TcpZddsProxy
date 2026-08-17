@@ -405,18 +405,22 @@ ProxyConfig MainWindow::collectConfigFromUi()
 void MainWindow::updateUiEditableState(bool running)
 {
     bool isClientMode = (m_modeCombo->currentData().toInt() == (int)ProxyMode::ProxyClient);
-    m_modeCombo->setEnabled(!running);
-    m_tcpHostEdit->setEnabled(!running);
-    m_tcpHostLabel->setEnabled(!running);
-    m_tcpPortSpin->setEnabled(!running);
-    m_zddsSendDomainEdit->setEnabled(!running);
-    m_zddsRecvDomainEdit->setEnabled(!running);
-    m_zddsSendTopicEdit->setEnabled(!running);
-    m_zddsRecvTopicEdit->setEnabled(!running);
-    m_autoReconnectCheck->setEnabled(!running && isClientMode);
-    m_reconnectIntervalSpin->setEnabled(!running && isClientMode && m_autoReconnectCheck->isChecked());
+    // 代理客户端模式：TCP断开后允许重新编辑配置并重启
+    bool tcpDisconnected = isClientMode && running && !m_proxyCore->isConnected();
+    bool locked = running && !tcpDisconnected;
 
-    if (running) {
+    m_modeCombo->setEnabled(!locked);
+    m_tcpHostEdit->setEnabled(!locked);
+    m_tcpHostLabel->setEnabled(!locked);
+    m_tcpPortSpin->setEnabled(!locked);
+    m_zddsSendDomainEdit->setEnabled(!locked);
+    m_zddsRecvDomainEdit->setEnabled(!locked);
+    m_zddsSendTopicEdit->setEnabled(!locked);
+    m_zddsRecvTopicEdit->setEnabled(!locked);
+    m_autoReconnectCheck->setEnabled(!locked && isClientMode);
+    m_reconnectIntervalSpin->setEnabled(!locked && isClientMode && m_autoReconnectCheck->isChecked());
+
+    if (running && !tcpDisconnected) {
         m_startBtn->setText(tr("停止代理"));
         m_startBtn->setStyleSheet("QPushButton{font-weight:bold;padding:6px 24px;background-color:#e74c3c;color:white;border:none;border-radius:4px;}"
                                   "QPushButton:hover{background-color:#c0392b;}");
@@ -429,9 +433,13 @@ void MainWindow::updateUiEditableState(bool running)
 
 void MainWindow::onToggleStart()
 {
-    if (m_proxyCore->isRunning()) {
+    // TCP断开(m_running=true但未连接)时，点按钮=重启
+    if (m_proxyCore->isRunning() && m_proxyCore->isConnected()) {
         m_proxyCore->stop();
     } else {
+        if (m_proxyCore->isRunning()) {
+            m_proxyCore->stop();
+        }
         ProxyConfig cfg = collectConfigFromUi();
         if (!cfg.isValid()) {
             QMessageBox::warning(this, tr("错误"),
