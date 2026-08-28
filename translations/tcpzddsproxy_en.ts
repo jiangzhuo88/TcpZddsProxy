@@ -9,32 +9,32 @@
         <translation>[Config] Config file not found, using defaults: %1</translation>
     </message>
     <message>
-        <location filename="../ConfigManager.cpp" line="67"/>
+        <location filename="../ConfigManager.cpp" line="68"/>
         <source>[配置] 打开失败: %1 (%2)</source>
         <translation>[Config] Open failed: %1 (%2)</translation>
     </message>
     <message>
-        <location filename="../ConfigManager.cpp" line="77"/>
+        <location filename="../ConfigManager.cpp" line="78"/>
         <source>[配置] JSON解析失败: %1 (offset:%2)</source>
         <translation>[Config] JSON parse error: %1 (offset:%2)</translation>
     </message>
     <message>
-        <location filename="../ConfigManager.cpp" line="81"/>
+        <location filename="../ConfigManager.cpp" line="82"/>
         <source>[配置] JSON顶层必须是对象</source>
         <translation>[Config] JSON top-level must be an object</translation>
     </message>
     <message>
-        <location filename="../ConfigManager.cpp" line="104"/>
+        <location filename="../ConfigManager.cpp" line="107"/>
         <source>[配置] 已加载配置文件: %1</source>
         <translation>[Config] Loaded config file: %1</translation>
     </message>
     <message>
-        <location filename="../ConfigManager.cpp" line="131"/>
+        <location filename="../ConfigManager.cpp" line="134"/>
         <source>[配置] 写入失败: %1 (%2)</source>
         <translation>[Config] Write failed: %1 (%2)</translation>
     </message>
     <message>
-        <location filename="../ConfigManager.cpp" line="137"/>
+        <location filename="../ConfigManager.cpp" line="140"/>
         <source>[配置] 已保存配置文件: %1</source>
         <translation>[Config] Saved config file: %1</translation>
     </message>
@@ -42,25 +42,25 @@
 <context>
     <name>MainWindow</name>
     <message>
-        <location filename="../MainWindow.cpp" line="343"/>
+        <location filename="../MainWindow.cpp" line="358"/>
         <source>提示</source>
         <translation>Information</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="343"/>
+        <location filename="../MainWindow.cpp" line="358"/>
         <source>请先停止代理后再保存配置</source>
         <translation>Please stop the proxy before saving configuration</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="348"/>
-        <location filename="../MainWindow.cpp" line="436"/>
-        <location filename="../MainWindow.cpp" line="560"/>
+        <location filename="../MainWindow.cpp" line="363"/>
+        <location filename="../MainWindow.cpp" line="461"/>
+        <location filename="../MainWindow.cpp" line="585"/>
         <source>错误</source>
         <translation>Error</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="349"/>
-        <location filename="../MainWindow.cpp" line="437"/>
+        <location filename="../MainWindow.cpp" line="364"/>
+        <location filename="../MainWindow.cpp" line="462"/>
         <source>请检查配置：
 1. TCP端口必须在 1-65535 之间
 2. 代理客户端模式必须填写真实服务端地址
@@ -71,29 +71,29 @@
 3. ZDDS domain, send topic, recv topic cannot be empty</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="357"/>
+        <location filename="../MainWindow.cpp" line="372"/>
         <source>保存成功</source>
         <translation>Save Success</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="358"/>
+        <location filename="../MainWindow.cpp" line="373"/>
         <source>配置已保存到：
 %1</source>
         <translation>Configuration saved to:
 %1</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="360"/>
+        <location filename="../MainWindow.cpp" line="375"/>
         <source>保存失败</source>
         <translation>Save Failed</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="360"/>
+        <location filename="../MainWindow.cpp" line="375"/>
         <source>请检查日志获取详细错误信息</source>
         <translation>Please check log for error details</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="373"/>
+        <location filename="../MainWindow.cpp" line="388"/>
         <source>真实服务端地址:</source>
         <translation>Real Server Address:</translation>
     </message>
@@ -102,73 +102,68 @@
         <translation type="vanished">(Server mode listens on all addresses)</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="419"/>
+        <location filename="../MainWindow.cpp" line="440"/>
         <source>停止代理</source>
         <translation>Stop Proxy</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="423"/>
+        <location filename="../MainWindow.cpp" line="444"/>
         <source>启动代理</source>
         <translation>Start Proxy</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="457"/>
+        <location filename="../MainWindow.cpp" line="482"/>
         <source>代理服务端</source>
         <translation>Proxy Server</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="459"/>
+        <location filename="../MainWindow.cpp" line="484"/>
         <source>代理客户端</source>
         <translation>Proxy Client</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="463"/>
+        <location filename="../MainWindow.cpp" line="488"/>
         <source>已停止</source>
         <translation>Stopped</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="466"/>
+        <location filename="../MainWindow.cpp" line="491"/>
         <source>运行中</source>
         <translation>Running</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="474"/>
+        <location filename="../MainWindow.cpp" line="499"/>
         <source>连接中...</source>
         <translation>Connecting...</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="470"/>
-        <source>重连中...</source>
-        <translation>Reconnecting...</translation>
-    </message>
-    <message>
-        <location filename="../MainWindow.cpp" line="494"/>
-        <location filename="../MainWindow.cpp" line="532"/>
+        <location filename="../MainWindow.cpp" line="519"/>
+        <location filename="../MainWindow.cpp" line="557"/>
         <source>未启动</source>
         <translation>Not Started</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="499"/>
+        <location filename="../MainWindow.cpp" line="524"/>
         <source>启动中...</source>
         <translation>Starting...</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="504"/>
+        <location filename="../MainWindow.cpp" line="529"/>
         <source>已接入</source>
         <translation>Connected</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="509"/>
+        <location filename="../MainWindow.cpp" line="534"/>
         <source>启动失败</source>
         <translation>Start Failed</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="517"/>
+        <location filename="../MainWindow.cpp" line="542"/>
         <source>已订阅</source>
         <translation>Subscribed</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="522"/>
+        <location filename="../MainWindow.cpp" line="547"/>
         <source>未订阅</source>
         <translation>Not Subscribed</translation>
     </message>
@@ -177,49 +172,49 @@
         <translation type="vanished">Listening (port %1)</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="545"/>
+        <location filename="../MainWindow.cpp" line="570"/>
         <source>连接中 (%1:%2)</source>
         <translation>Connecting (%1:%2)</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="550"/>
+        <location filename="../MainWindow.cpp" line="575"/>
         <source>已连接 (%1:%2)</source>
         <translation>Connected (%1:%2)</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="555"/>
+        <location filename="../MainWindow.cpp" line="580"/>
         <source>已断开</source>
         <translation>Disconnected</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="570"/>
+        <location filename="../MainWindow.cpp" line="595"/>
         <source>%1 个客户端</source>
         <translation>%1 client(s)</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="574"/>
+        <location filename="../MainWindow.cpp" line="599"/>
         <source>无客户端</source>
         <translation>No Clients</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="586"/>
-        <location filename="../MainWindow.cpp" line="597"/>
+        <location filename="../MainWindow.cpp" line="611"/>
+        <location filename="../MainWindow.cpp" line="622"/>
         <source>活跃 (%1)</source>
         <translation>Active (%1)</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="590"/>
-        <location filename="../MainWindow.cpp" line="601"/>
+        <location filename="../MainWindow.cpp" line="615"/>
+        <location filename="../MainWindow.cpp" line="626"/>
         <source>空闲</source>
         <translation>Idle</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="632"/>
+        <location filename="../MainWindow.cpp" line="657"/>
         <source>TCP-ZDDS 双向代理软件</source>
         <translation>TCP-ZDDS Bidirectional Proxy</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="635"/>
+        <location filename="../MainWindow.cpp" line="660"/>
         <source>配置</source>
         <translation>Configuration</translation>
     </message>
@@ -228,163 +223,178 @@
         <translation type="vanished">Language:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="186"/>
+        <location filename="../MainWindow.cpp" line="169"/>
+        <source>消息码:</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../MainWindow.cpp" line="196"/>
         <source>自动重连</source>
         <translation>Auto Reconnected</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="188"/>
+        <location filename="../MainWindow.cpp" line="198"/>
         <source>重连间隔(秒):</source>
         <translation>Reconnect Range:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="376"/>
+        <location filename="../MainWindow.cpp" line="391"/>
         <source>监听地址:</source>
         <translation>Listen Address:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="539"/>
+        <location filename="../MainWindow.cpp" line="495"/>
+        <source>重连中...</source>
+        <translation>Reconnectting...</translation>
+    </message>
+    <message>
+        <location filename="../MainWindow.cpp" line="564"/>
         <source>监听中 (%1:%2)</source>
         <translation>Listening (%1:%2)</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="636"/>
+        <location filename="../MainWindow.cpp" line="661"/>
         <source>代理模式:</source>
         <translation>Proxy Mode:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="637"/>
+        <location filename="../MainWindow.cpp" line="662"/>
         <source>TCP端口:</source>
         <translation>TCP Port:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="638"/>
+        <location filename="../MainWindow.cpp" line="663"/>
         <source>ZDDS发送域名称:</source>
         <translation>ZDDS Send Domain:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="639"/>
+        <location filename="../MainWindow.cpp" line="664"/>
         <source>ZDDS接收域名称:</source>
         <translation>ZDDS Recv Domain:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="640"/>
+        <location filename="../MainWindow.cpp" line="665"/>
         <source>ZDDS发送主题(TCP→ZDDS):</source>
         <translation>ZDDS Send Topic (TCP-&gt;ZDDS):</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="641"/>
+        <location filename="../MainWindow.cpp" line="666"/>
         <source>ZDDS接收主题(ZDDS→TCP):</source>
         <translation>ZDDS Recv Topic (ZDDS-&gt;TCP):</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="642"/>
+        <location filename="../MainWindow.cpp" line="667"/>
         <source>例如: 192.168.1.100 或 127.0.0.1</source>
         <translation>e.g. 192.168.1.100 or 127.0.0.1</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="643"/>
-        <location filename="../MainWindow.cpp" line="644"/>
+        <location filename="../MainWindow.cpp" line="668"/>
+        <location filename="../MainWindow.cpp" line="669"/>
         <source>例如: DomainTCPProxy</source>
         <translation>e.g. DomainTCPProxy</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="645"/>
+        <location filename="../MainWindow.cpp" line="670"/>
         <source>例如: TopicTcpToZdds</source>
         <translation>e.g. TopicTcpToZdds</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="646"/>
+        <location filename="../MainWindow.cpp" line="671"/>
         <source>例如: TopicZddsToTcp</source>
         <translation>e.g. TopicZddsToTcp</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="647"/>
+        <location filename="../MainWindow.cpp" line="672"/>
+        <source>0x开头，输入十六进制</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../MainWindow.cpp" line="673"/>
         <source>保存配置</source>
         <translation>Save Config</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="648"/>
+        <location filename="../MainWindow.cpp" line="674"/>
         <source>清空日志</source>
         <translation>Clear Log</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="654"/>
+        <location filename="../MainWindow.cpp" line="680"/>
         <source>代理服务端 (监听端口，接收真实客户端)</source>
         <translation>Proxy Server (Listen port, accept real client)</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="655"/>
+        <location filename="../MainWindow.cpp" line="681"/>
         <source>代理客户端 (连接真实服务端)</source>
         <translation>Proxy Client (Connect to real server)</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="662"/>
+        <location filename="../MainWindow.cpp" line="688"/>
         <source>连接状态总览</source>
         <translation>Connection Status Overview</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="665"/>
+        <location filename="../MainWindow.cpp" line="691"/>
         <source>ZDDS 状态</source>
         <translation>ZDDS Status</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="666"/>
+        <location filename="../MainWindow.cpp" line="692"/>
         <source>ZDDS 订阅</source>
         <translation>ZDDS Subscription</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="667"/>
+        <location filename="../MainWindow.cpp" line="693"/>
         <source>TCP 链路</source>
         <translation>TCP Link</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="668"/>
+        <location filename="../MainWindow.cpp" line="694"/>
         <source>已连接客户端</source>
         <translation>Connected Clients</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="669"/>
+        <location filename="../MainWindow.cpp" line="695"/>
         <source>数据流 TCP→ZDDS</source>
         <translation>Data Flow TCP-&gt;ZDDS</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="670"/>
+        <location filename="../MainWindow.cpp" line="696"/>
         <source>数据流 ZDDS→TCP</source>
         <translation>Data Flow ZDDS-&gt;TCP</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="673"/>
+        <location filename="../MainWindow.cpp" line="699"/>
         <source>当前模式</source>
         <translation>Mode</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="674"/>
+        <location filename="../MainWindow.cpp" line="700"/>
         <source>运行状态</source>
         <translation>Run Status</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="675"/>
+        <location filename="../MainWindow.cpp" line="701"/>
         <source>TCP接收字节:</source>
         <translation>TCP RX Bytes:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="676"/>
+        <location filename="../MainWindow.cpp" line="702"/>
         <source>TCP发送字节:</source>
         <translation>TCP TX Bytes:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="677"/>
+        <location filename="../MainWindow.cpp" line="703"/>
         <source>ZDDS接收字节:</source>
         <translation>ZDDS RX Bytes:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="678"/>
+        <location filename="../MainWindow.cpp" line="704"/>
         <source>ZDDS发送字节:</source>
         <translation>ZDDS TX Bytes:</translation>
     </message>
     <message>
-        <location filename="../MainWindow.cpp" line="681"/>
+        <location filename="../MainWindow.cpp" line="707"/>
         <source>日志</source>
         <translation>Log</translation>
     </message>
@@ -570,7 +580,7 @@
         <translation>[ZDDS] Unsubscribe %1/%2</translation>
     </message>
     <message>
-        <location filename="../ZDDSManager.cpp" line="141"/>
+        <location filename="../ZDDSManager.cpp" line="149"/>
         <source>[ZDDS] 启动成功通知回调</source>
         <translation>[ZDDS] Start success notification callback</translation>
     </message>

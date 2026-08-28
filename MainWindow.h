@@ -87,8 +87,9 @@ private:
 
     // 自动重连配置
     QCheckBox *m_autoReconnectCheck;
-    QLabel *m_reconnectIntervalLabel;
     QSpinBox *m_reconnectIntervalSpin;
+    // 消息码
+    QLineEdit *m_unMsgCodeEdit;
 
     // TCP配置
     QLineEdit *m_tcpHostEdit;

@@ -12,10 +12,16 @@
 
 static QString formatBytes(quint64 bytes)
 {
-    if (bytes < 1024) return QString::number(bytes) + " B";
-    if (bytes < 1024 * 1024) return QString::number(bytes / 1024.0, 'f', 2) + " KB";
-    if (bytes < 1024ULL * 1024 * 1024) return QString::number(bytes / (1024.0 * 1024), 'f', 2) + " MB";
-    return QString::number(bytes / (1024.0 * 1024 * 1024), 'f', 2) + " GB";
+    const quint64 KB = 1024ULL;
+    const quint64 MB = 1024ULL * KB;
+    const quint64 GB = 1024ULL * MB;
+    const quint64 TB = 1024ULL * GB;
+
+    if (bytes < KB) return QString::number(bytes) + " B";
+    if (bytes < MB) return QString::number(bytes / 1024.0, 'f', 2) + " KB";
+    if (bytes < GB) return QString::number(bytes / (1024.0 * 1024), 'f', 2) + " MB";
+    if (bytes < TB) return QString::number(bytes / (1024.0 * 1024 * 1024), 'f', 2) + " GB";
+    return QString::number(bytes / (1024.0 * 1024 * 1024 * 1024), 'f', 2) + " TB";
 }
 
 // ============================================================
@@ -82,8 +88,6 @@ MainWindow::MainWindow(QWidget *parent)
     , m_proxyCore(new TcpProxyCore(this))
     , m_statsTimer(new QTimer(this))
 {
-    setupUi();
-
     // 从配置文件读取语言设置，在 retranslateUi 之前应用
     ProxyConfig tmpCfg;
     if (ConfigManager::getInstance()->loadConfig(tmpCfg)) {
@@ -91,6 +95,7 @@ MainWindow::MainWindow(QWidget *parent)
             ? LanguageManager::English : LanguageManager::Chinese;
         LanguageManager::instance()->setLanguage(lang);
     }
+    setupUi();
 
     retranslateUi();   // 先填充 combo items 和所有文本，再加载配置
     loadConfigFromFile();
@@ -160,6 +165,11 @@ void MainWindow::setupUi()
     m_tcpPortSpin->setRange(1, 65535);
     m_tcpPortSpin->setValue(9000);
     cfgLayout->addWidget(m_tcpPortSpin, row, 1);
+
+    cfgLayout->addWidget(new QLabel(tr("消息码:")), row, 2);
+    m_unMsgCodeEdit = new QLineEdit(m_configBox);
+    cfgLayout->addWidget(m_unMsgCodeEdit, row, 3);
+//    row++;
     row++;
 
     m_zddsSendDomainLabel = new QLabel(m_configBox);
@@ -185,14 +195,15 @@ void MainWindow::setupUi()
     // 自动重连配置（仅代理客户端模式有效）
     m_autoReconnectCheck = new QCheckBox(tr("自动重连"), m_configBox);
     cfgLayout->addWidget(m_autoReconnectCheck, row, 0);
-    m_reconnectIntervalLabel = new QLabel(tr("重连间隔(秒):"), m_configBox);
-    cfgLayout->addWidget(m_reconnectIntervalLabel, row, 2);
+    cfgLayout->addWidget(new QLabel(tr("重连间隔(秒):")), row, 2);
     m_reconnectIntervalSpin = new QSpinBox(m_configBox);
     m_reconnectIntervalSpin->setRange(1, 300);
     m_reconnectIntervalSpin->setValue(5);
     cfgLayout->addWidget(m_reconnectIntervalSpin, row, 3);
     connect(m_autoReconnectCheck, &QCheckBox::toggled, m_reconnectIntervalSpin, &QSpinBox::setEnabled);
     row++;
+
+
 
     QHBoxLayout *btnLayout = new QHBoxLayout();
     m_saveBtn = new QPushButton(m_configBox);
@@ -276,6 +287,7 @@ void MainWindow::setupUi()
 
     // ============ 底部：日志区 ============
     m_logBox = new QGroupBox(centralWidget);
+    m_logBox->setVisible(false);
     QVBoxLayout *logLayout = new QVBoxLayout(m_logBox);
     logLayout->setContentsMargins(12, 16, 12, 12);
 
@@ -318,6 +330,7 @@ void MainWindow::loadConfigFromFile()
         cfg.zddsRecvTopic = "ZddsToTcp";
         cfg.autoReconnect = false;
         cfg.reconnectInterval = 5;
+        cfg.unMsgCode = 0;
     }
     applyConfigToUi(cfg);
 }
@@ -336,6 +349,7 @@ void MainWindow::applyConfigToUi(const ProxyConfig &cfg)
     m_zddsRecvTopicEdit->setText(cfg.zddsRecvTopic);
     m_autoReconnectCheck->setChecked(cfg.autoReconnect);
     m_reconnectIntervalSpin->setValue(cfg.reconnectInterval);
+    m_unMsgCodeEdit->setText("0x" + QString::number(cfg.unMsgCode,16));
 }
 
 void MainWindow::onSaveConfig()
@@ -399,15 +413,16 @@ ProxyConfig MainWindow::collectConfigFromUi()
     cfg.language = LanguageManager::instance()->currentLanguage();
     cfg.autoReconnect = m_autoReconnectCheck->isChecked();
     cfg.reconnectInterval = m_reconnectIntervalSpin->value();
+    bool ok;
+    cfg.unMsgCode = m_unMsgCodeEdit->text().toInt(&ok,16);
     return cfg;
 }
 
 void MainWindow::updateUiEditableState(bool running)
 {
     bool isClientMode = (m_modeCombo->currentData().toInt() == (int)ProxyMode::ProxyClient);
-    // 代理客户端模式：TCP断开后允许重新编辑配置并重启
-    bool tcpDisconnected = isClientMode && running && !m_proxyCore->isConnected();
-    bool locked = running && !tcpDisconnected;
+    bool tcpDisconected = isClientMode && running && !m_proxyCore->isConnected();
+    bool locked = running && !tcpDisconected;
 
     m_modeCombo->setEnabled(!locked);
     m_tcpHostEdit->setEnabled(!locked);
@@ -419,8 +434,9 @@ void MainWindow::updateUiEditableState(bool running)
     m_zddsRecvTopicEdit->setEnabled(!locked);
     m_autoReconnectCheck->setEnabled(!locked && isClientMode);
     m_reconnectIntervalSpin->setEnabled(!locked && isClientMode && m_autoReconnectCheck->isChecked());
+    m_unMsgCodeEdit->setEnabled(!locked);
 
-    if (running && !tcpDisconnected) {
+    if (running && !tcpDisconected) {
         m_startBtn->setText(tr("停止代理"));
         m_startBtn->setStyleSheet("QPushButton{font-weight:bold;padding:6px 24px;background-color:#e74c3c;color:white;border:none;border-radius:4px;}"
                                   "QPushButton:hover{background-color:#c0392b;}");
@@ -433,11 +449,11 @@ void MainWindow::updateUiEditableState(bool running)
 
 void MainWindow::onToggleStart()
 {
-    // TCP断开(m_running=true但未连接)时，点按钮=重启
     if (m_proxyCore->isRunning() && m_proxyCore->isConnected()) {
         m_proxyCore->stop();
     } else {
-        if (m_proxyCore->isRunning()) {
+        if(m_proxyCore->isRunning())
+        {
             m_proxyCore->stop();
         }
         ProxyConfig cfg = collectConfigFromUi();
@@ -653,10 +669,9 @@ void MainWindow::retranslateUi()
     m_zddsRecvDomainEdit->setPlaceholderText(tr("例如: DomainTCPProxy"));
     m_zddsSendTopicEdit->setPlaceholderText(tr("例如: TopicTcpToZdds"));
     m_zddsRecvTopicEdit->setPlaceholderText(tr("例如: TopicZddsToTcp"));
+    m_unMsgCodeEdit->setPlaceholderText(tr("0x开头，输入十六进制"));
     m_saveBtn->setText(tr("保存配置"));
     m_clearLogBtn->setText(tr("清空日志"));
-    m_autoReconnectCheck->setText(tr("自动重连"));
-    m_reconnectIntervalLabel->setText(tr("重连间隔(秒):"));
 
     // Mode combo items
     int curIdx = m_modeCombo->currentIndex();

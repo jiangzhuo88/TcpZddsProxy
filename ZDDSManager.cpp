@@ -90,15 +90,23 @@ void ZDDSManager::unsubscribe(const char* domainName, const char* topicName)
     emit logMessage(tr("[ZDDS] 取消订阅 %1/%2").arg(QString::fromUtf8(domainName)).arg(QString::fromUtf8(topicName)));
 }
 
-void ZDDSManager::publish(const char* domainName, const char* topicName, const char* data, size_t len)
+void ZDDSManager::publish(const char* domainName, const char* topicName, quint32 unMsgCode, const char* data, size_t len)
 {
     if (m_zddsInterface == nullptr) return;
-    m_zddsInterface->asySendMessage(domainName, topicName, data, len);
+    stDMHead dataHead;
+    int headLen = sizeof(stDMHead);
+    dataHead.unMsgLen = headLen + len;
+    dataHead.unMsgCode = unMsgCode;
+    QByteArray arr;
+    arr.resize(dataHead.unMsgLen);
+    memcpy(arr.data(),&dataHead,headLen);
+    memcpy(arr.data() + headLen,data,len);
+    m_zddsInterface->asySendMessage(domainName, topicName, arr.data(), arr.length());
 }
 
-void ZDDSManager::publish(const char* domainName, const char* topicName, const QByteArray &data)
+void ZDDSManager::publish(const char* domainName, const char* topicName,quint32 unMsgCode, const QByteArray &data)
 {
-    publish(domainName, topicName, data.constData(), (size_t)data.size());
+    publish(domainName, topicName,unMsgCode, data.constData(), (size_t)data.size());
 }
 
 int ZDDSManager::subscribedCount() const
@@ -116,6 +124,7 @@ void ZDDSManager::staticOnRecvData(const char* domainName, const char* topicName
 {
     ZDDSManager* self = static_cast<ZDDSManager*>(context);
     if (!self || !data) return;
+    int headSize = sizeof(stDMHead);
     // 拷贝回调列表到局部变量，缩小锁的临界区
     std::list<RecvCallback> callbacks;
     {
@@ -127,7 +136,7 @@ void ZDDSManager::staticOnRecvData(const char* domainName, const char* topicName
         callbacks = itTopic->second;
     }
     for (auto &cb : callbacks) {
-        cb(data, len);
+        cb(data + headSize, len - headSize);
     }
 }
 

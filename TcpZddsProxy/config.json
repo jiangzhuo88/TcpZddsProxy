@@ -1,0 +1,13 @@
+{
+    "autoReconnect": false,
+    "language": 1,
+    "mode": 1,
+    "reconnectInterval": 2,
+    "tcpHost": "202.115.212.172",
+    "tcpPort": 8999,
+    "unMsgCode": "0x3008",
+    "zddsRecvDomain": "DDS_30",
+    "zddsRecvTopic": "DeviceStatusRecvProxy",
+    "zddsSendDomain": "DDS_30",
+    "zddsSendTopic": "DeviceStatusSendProxy"
+}

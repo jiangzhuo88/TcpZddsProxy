@@ -57,6 +57,7 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
         def.autoReconnect = false;
         def.reconnectInterval = 5;
         def.language = 1;  // 默认中文
+        def.unMsgCode = 0;
         outCfg = def;
         m_lastCfg = def;
         saveConfig(def);
@@ -94,6 +95,8 @@ bool ConfigManager::loadConfig(ProxyConfig &outCfg)
     cfg.language = obj.value("language").toInt(1);  // 默认中文
     cfg.autoReconnect = obj.value("autoReconnect").toBool(false);
     cfg.reconnectInterval = obj.value("reconnectInterval").toInt(5);
+    bool ok;
+    cfg.unMsgCode = obj.value("unMsgCode").toString().toInt(&ok,16);
     if (cfg.reconnectInterval < 1) cfg.reconnectInterval = 5;
 
     // 修正端口
@@ -118,7 +121,7 @@ bool ConfigManager::saveConfig(const ProxyConfig &cfg)
     obj.insert("autoReconnect", cfg.autoReconnect);
     obj.insert("reconnectInterval", cfg.reconnectInterval);
     obj.insert("language", cfg.language);
-
+    obj.insert("unMsgCode", "0x" + QString::number(cfg.unMsgCode,16));
     QJsonDocument doc(obj);
     QString path = defaultConfigFilePath();
 

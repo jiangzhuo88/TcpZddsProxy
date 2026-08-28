@@ -4,7 +4,7 @@ greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 TARGET = TcpZddsProxy
 TEMPLATE = app
 CONFIG += c++11
-DESTDIR = $$PWD/bin/
+DESTDIR = $$PWD/TcpZddsProxy/
 
 INCLUDEPATH += $$PWD
 INCLUDEPATH += $$PWD/ZDDS/include
@@ -17,7 +17,7 @@ INCLUDEPATH += $$PWD/src/ZDDS/include
 LIBS += -L$$PWD/src/ZDDS/lib -lZDDSd
 LIBS += -L$$PWD/src/ZDDS/lib -lzmq
 
-system(cp -r "$$PWD/src/ZDDS/lib/lib*.so*" "$$DESTDIR")
+system(cp -r "$$PWD/ZDDS/lib/lib*.so*" "$$DESTDIR")
 
 # Qt Linguist 翻译文件
 TRANSLATIONS += translations/tcpzddsproxy_en.ts

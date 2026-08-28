@@ -340,9 +340,10 @@ void TcpProxyCore::forwardTcpToZdds(const QByteArray &data, const QString &peerI
 {
     if (data.isEmpty()) return;
     ZDDSManager::getInstance()->publish(
-        m_cfg.zddsSendDomain.toUtf8().constData(),
-        m_cfg.zddsSendTopic.toUtf8().constData(),
-        data);
+                m_cfg.zddsSendDomain.toUtf8().constData(),
+                m_cfg.zddsSendTopic.toUtf8().constData(),
+                m_cfg.unMsgCode,
+                data);
     m_zddsTxBytes += data.size();
     m_lastTcpToZddsTime = QDateTime::currentDateTime();
     emit logMessage(tr("[ZDDS发->] %1/%2 发送 %3字节 (来源:%4)")

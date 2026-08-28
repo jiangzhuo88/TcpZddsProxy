@@ -45,6 +45,7 @@ struct ProxyConfig {
 
     // 语言设置（0=中文, 1=英文）
     int language = 0;
+    int unMsgCode = 0x00;
 
     bool isValid() const {
         if (zddsSendDomain.isEmpty() || zddsRecvDomain.isEmpty() || zddsSendTopic.isEmpty() || zddsRecvTopic.isEmpty())

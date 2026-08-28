@@ -1,5 +1,6 @@
 <RCC>
-    <qresource prefix="/translations">
+    <qresource prefix="/">
         <file>translations/tcpzddsproxy_en.qm</file>
+        <file>Proxy.png</file>
     </qresource>
 </RCC>
