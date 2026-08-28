@@ -38,7 +38,8 @@ HEADERS += \
     TcpProxyCore.h \
     ConfigManager.h \
     LanguageManager.h \
-    MainWindow.h
+    MainWindow.h \
+    version.h
 
 # 翻译源文件
 DISTFILES += \

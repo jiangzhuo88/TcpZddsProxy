@@ -60,6 +60,7 @@ private slots:
     void onUpdateStats();
     void onSaveConfig();
     void onZddsStatusChanged();
+    void onAboutVersion();
 
 private:
     void setupUi();
@@ -87,6 +88,7 @@ private:
 
     // 自动重连配置
     QCheckBox *m_autoReconnectCheck;
+    QLabel *m_reconnectIntervalLabel;
     QSpinBox *m_reconnectIntervalSpin;
     // 消息码
     QLineEdit *m_unMsgCodeEdit;
@@ -105,6 +107,7 @@ private:
     QPushButton *m_startBtn;
     QPushButton *m_clearLogBtn;
     QPushButton *m_saveBtn;
+    QPushButton *m_aboutBtn;
 
     // 状态区
     QGroupBox *m_statusBox;

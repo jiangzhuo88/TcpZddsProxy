@@ -9,6 +9,7 @@
 #include <QPushButton>
 #include <QTextCursor>
 #include <QFrame>
+#include "version.h"
 
 static QString formatBytes(quint64 bytes)
 {
@@ -195,7 +196,8 @@ void MainWindow::setupUi()
     // 自动重连配置（仅代理客户端模式有效）
     m_autoReconnectCheck = new QCheckBox(tr("自动重连"), m_configBox);
     cfgLayout->addWidget(m_autoReconnectCheck, row, 0);
-    cfgLayout->addWidget(new QLabel(tr("重连间隔(秒):")), row, 2);
+    m_reconnectIntervalLabel = new QLabel(tr("重连间隔(秒):"), m_configBox);
+    cfgLayout->addWidget(m_reconnectIntervalLabel, row, 2);
     m_reconnectIntervalSpin = new QSpinBox(m_configBox);
     m_reconnectIntervalSpin->setRange(1, 300);
     m_reconnectIntervalSpin->setValue(5);
@@ -211,6 +213,12 @@ void MainWindow::setupUi()
     m_saveBtn->setStyleSheet("QPushButton{padding:6px 18px;}");
     connect(m_saveBtn, &QPushButton::clicked, this, &MainWindow::onSaveConfig);
     btnLayout->addWidget(m_saveBtn);
+
+    m_aboutBtn = new QPushButton(m_configBox);
+    m_aboutBtn->setMinimumHeight(34);
+    m_aboutBtn->setStyleSheet("QPushButton{padding:6px 18px;}");
+    connect(m_aboutBtn, &QPushButton::clicked, this, &MainWindow::onAboutVersion);
+    btnLayout->addWidget(m_aboutBtn);
     btnLayout->addStretch();
     m_startBtn = new QPushButton(m_configBox);
     m_startBtn->setMinimumHeight(34);
@@ -652,6 +660,24 @@ void MainWindow::onClearLog()
     m_logEdit->clear();
 }
 
+void MainWindow::onAboutVersion()
+{
+    QString info = QString(
+        "<h2>TCP-ZDDS %1</h2>"
+        "<p><b>Build:</b> %2</p>"
+        "<pre style='font-size:11px;'>%3</pre>"
+    ).arg(AppVersion::Version)
+     .arg(AppVersion::BuildDate)
+     .arg(AppVersion::Notes);
+
+    QMessageBox *msgBox = new QMessageBox(this);
+    msgBox->setIcon(QMessageBox::Information);
+    msgBox->setWindowTitle(tr("关于"));
+    msgBox->setText(info);
+    msgBox->setStandardButtons(QMessageBox::Ok);
+    msgBox->exec();
+}
+
 void MainWindow::retranslateUi()
 {
     setWindowTitle(tr("TCP-ZDDS 双向代理软件"));
@@ -671,7 +697,10 @@ void MainWindow::retranslateUi()
     m_zddsRecvTopicEdit->setPlaceholderText(tr("例如: TopicZddsToTcp"));
     m_unMsgCodeEdit->setPlaceholderText(tr("0x开头，输入十六进制"));
     m_saveBtn->setText(tr("保存配置"));
+    m_aboutBtn->setText(tr("关于"));
     m_clearLogBtn->setText(tr("清空日志"));
+    m_autoReconnectCheck->setText(tr("自动重连"));
+    m_reconnectIntervalLabel->setText(tr("重连间隔(秒):"));
 
     // Mode combo items
     int curIdx = m_modeCombo->currentIndex();

@@ -306,7 +306,7 @@
     <message>
         <location filename="../MainWindow.cpp" line="672"/>
         <source>0x开头，输入十六进制</source>
-        <translation type="unfinished"></translation>
+        <translation>Hex with 0x prefix</translation>
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="673"/>
@@ -315,6 +315,11 @@
     </message>
     <message>
         <location filename="../MainWindow.cpp" line="674"/>
+        <source>关于</source>
+        <translation>About</translation>
+    </message>
+    <message>
+        <location filename="../MainWindow.cpp" line="675"/>
         <source>清空日志</source>
         <translation>Clear Log</translation>
     </message>
@@ -397,6 +402,19 @@
         <location filename="../MainWindow.cpp" line="707"/>
         <source>日志</source>
         <translation>Log</translation>
+    </message>
+</context>
+<context>
+    <name>QObject</name>
+    <message>
+        <location filename="../main.cpp" line="20"/>
+        <source>提示</source>
+        <translation>Information</translation>
+    </message>
+    <message>
+        <location filename="../main.cpp" line="21"/>
+        <source>程序已在运行中，不允许重复启动。</source>
+        <translation>Application is already running, duplicate launch is not allowed.</translation>
     </message>
 </context>
 <context>
