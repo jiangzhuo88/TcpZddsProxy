@@ -26,13 +26,10 @@ int main(int argc, char *argv[])
     QLocalServer::removeServer(serverName);
     QLocalServer localServer;
     localServer.listen(serverName);
-    QObject::connect(&localServer, &QLocalServer::newConnection, []() {
+    QObject::connect(&localServer, &QLocalServer::newConnection, [&localServer]() {
         // 接受连接但不处理，仅用于占位
-        QLocalServer *server = qobject_cast<QLocalServer*>(sender());
-        if (server) {
-            QLocalSocket *client = server->nextPendingConnection();
-            if (client) client->deleteLater();
-        }
+        QLocalSocket *client = localServer.nextPendingConnection();
+        if (client) client->deleteLater();
     });
 
     MainWindow w;
