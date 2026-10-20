@@ -389,7 +389,7 @@ void TcpProxyCore::doForwardZddsToTcp(const QByteArray &bytes)
         }
     } else {
         // 代理客户端：ZDDS数据 -> 转发给真实服务端
-        if (m_serverSocket && m_serverSocket->isOpen()) {
+        if (m_serverSocket && m_serverSocketConnected) {
             qint64 written = m_serverSocket->write(bytes);
             if (written > 0) {
                 m_tcpTxBytes += written;

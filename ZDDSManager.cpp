@@ -125,6 +125,10 @@ void ZDDSManager::staticOnRecvData(const char* domainName, const char* topicName
     ZDDSManager* self = static_cast<ZDDSManager*>(context);
     if (!self || !data) return;
     int headSize = sizeof(stDMHead);
+    // 长度保护：数据必须大于协议头，否则剥离头部会越界读取
+    if (len < (size_t)headSize) {
+        return;
+    }
     // 拷贝回调列表到局部变量，缩小锁的临界区
     std::list<RecvCallback> callbacks;
     {
